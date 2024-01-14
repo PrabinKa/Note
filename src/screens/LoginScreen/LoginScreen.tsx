@@ -15,8 +15,16 @@ import {
 } from 'react-native-responsive-dimensions';
 
 import {useTheme} from '../../theme/ThemeProvider';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../navigation/RootNavigator';
 
-function LoginScreen() {
+type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
+
+interface LoginScreenProps {
+  navigation: LoginScreenNavigationProp;
+}
+
+function LoginScreen({navigation}: LoginScreenProps) {
   const {colors} = useTheme();
   const [showPassword, setShowPassword] = useState(true);
 
@@ -81,7 +89,7 @@ function LoginScreen() {
         </ButtonWithIcon>
         <View style={{flexDirection: 'row', justifyContent: 'center'}}>
           <Text style={{fontSize: 16, color: colors.text}}>New user? </Text>
-          <Pressable style={({pressed}) => pressed && styles.pressedItem}>
+          <Pressable onPress={() => {navigation.navigate('SignUp')}} style={({pressed}) => pressed && styles.pressedItem}>
             <Text
               style={{
                 color: colors.primary,

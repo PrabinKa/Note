@@ -1,7 +1,5 @@
 import {
-  StyleSheet,
   Text,
-  View,
   TouchableOpacity,
   Image,
   ViewStyle,
@@ -35,8 +33,10 @@ export default function ButtonWithIcon({
         paddingHorizontal: 30,
         ...(buttonStyles as object),
       }}>
-      <Text style={{color: colors.background, fontWeight: 'bold'}}>{children}</Text>
       <Image source={icon} style={{height: 25, width: 25}} />
+      <Text style={{color: colors.background, fontWeight: 'bold'}}>
+        {children}
+      </Text>
     </TouchableOpacity>
   );
 }
