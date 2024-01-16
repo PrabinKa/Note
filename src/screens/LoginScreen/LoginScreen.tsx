@@ -38,7 +38,7 @@ function LoginScreen({navigation}: LoginScreenProps) {
         flex: 1,
         // justifyContent: 'center',
         // alignItems: 'center',
-        backgroundColor: colors.backgroundColor,
+        backgroundColor: colors.background,
       }}>
       <View style={styles.titleContainer}>
         <Text style={[styles.title, {color: colors.primary}]}>NOTE</Text>

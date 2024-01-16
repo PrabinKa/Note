@@ -213,7 +213,7 @@ export default function DrawerNavigator() {
             paddingRight: 10,
             backgroundColor: colors.background,
           },
-          // headerShown: false,
+          headerShown: false,
         }}
         drawerContent={props => {
           return (
