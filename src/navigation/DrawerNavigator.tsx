@@ -86,7 +86,7 @@ interface DrawerContentProps {
 }
 
 const DrawerContent = ({navigation, colors}: DrawerContentProps) => {
-  const [selectedTab, setSelectedTab] = useState('notes');
+  const [selectedTab, setSelectedTab] = useState('AllNotes');
 
   return (
     <DrawerContentScrollView
@@ -206,7 +206,7 @@ export default function DrawerNavigator() {
     <View style={{flex: 1, backgroundColor: colors.background}}>
       <Drawer.Navigator
         screenOptions={{
-          drawerType: 'front',
+          drawerType: 'back',
           drawerStyle: {
             flex: 1,
             width: 250,
