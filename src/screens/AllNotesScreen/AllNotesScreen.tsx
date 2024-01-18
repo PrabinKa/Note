@@ -58,6 +58,7 @@ const Header = ({navigation}: AllNotesScreenProps) => {
         activeOpacity={0.5}
         onPress={() => navigation.openDrawer()}>
         <Image
+          resizeMode='contain'
           source={require('../../assets/drawer.png')}
           style={[styles.drawerIcon, {tintColor: colors.text}]}
         />
