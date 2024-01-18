@@ -1,13 +1,13 @@
-import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
+import { StyleSheet, Text, View } from 'react-native'
 
 import { DrawerParamList } from '../../navigation/DrawerNavigator'
-import { RouteProp } from '@react-navigation/native';
+import { DrawerNavigationProp } from '@react-navigation/drawer';
 
-type TrashNoteScreenRouteProp = RouteProp<DrawerParamList, 'AllNotes'>;
+type TrashNoteScreenNavigationProp = DrawerNavigationProp<DrawerParamList, 'Trash'>;
 
 interface TrashNoteScreenProps {
-  navigation: any; // Change this to the correct type
+  navigation: TrashNoteScreenNavigationProp;
 }
 
 export default function TrashNoteScreen({navigation}: TrashNoteScreenProps) {

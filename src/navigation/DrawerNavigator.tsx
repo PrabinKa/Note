@@ -45,7 +45,7 @@ const CustomDrawerItem = ({
   onPress,
   colors,
 }: CustomDrawerItemProps) => {
-  // console.warn("label", label)
+
   return (
     <TouchableOpacity
       style={{

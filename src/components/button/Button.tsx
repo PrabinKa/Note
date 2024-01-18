@@ -10,7 +10,7 @@ interface ButtonProps {
 export default function Button({colors,children, buttonStyles}: ButtonProps) {
   return (
     <TouchableOpacity
-      activeOpacity={0.7}
+      activeOpacity={0.5}
       style={{
         backgroundColor: colors.button,
         justifyContent: 'center',

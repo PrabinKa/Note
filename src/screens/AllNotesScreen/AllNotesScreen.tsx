@@ -1,3 +1,4 @@
+import React, {useState, useEffect} from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,12 +10,11 @@ import {
   TextInput,
   Pressable,
 } from 'react-native';
-import React, {useState, useEffect} from 'react';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import {useTheme} from '../../theme/ThemeProvider';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import {NotesCategory, Notes} from '../../constants/Constants';
 import responsiveSize from '../../utils/ResponsiveSize';
+import {NotesCategory, Notes} from '../../constants/Constants';
 
 import {
   responsiveHeight,

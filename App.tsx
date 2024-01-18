@@ -1,15 +1,20 @@
 import 'react-native-gesture-handler';
 import React from 'react';
-import {SafeAreaView, View, StatusBar} from 'react-native';
+import {StatusBar} from 'react-native';
 
-import {ThemeProvider} from './src/theme/ThemeProvider';
 import RootNavigator from './src/navigation/RootNavigator';
+import {useTheme} from './src/theme/ThemeProvider';
 
 function App(): React.JSX.Element {
+  const {colors} = useTheme();
   return (
-    <ThemeProvider>
-      <RootNavigator/>
-    </ThemeProvider>
+    <>
+      <StatusBar
+        backgroundColor={colors.background}
+        barStyle={'dark-content'}
+      />
+      <RootNavigator />
+    </>
   );
 }
 export default App;
