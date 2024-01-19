@@ -4,6 +4,7 @@ import {StatusBar} from 'react-native';
 
 import RootNavigator from './src/navigation/RootNavigator';
 import {useTheme} from './src/theme/ThemeProvider';
+import Toast from 'react-native-toast-message';
 
 function App(): React.JSX.Element {
   const {colors} = useTheme();
@@ -14,6 +15,7 @@ function App(): React.JSX.Element {
         barStyle={'dark-content'}
       />
       <RootNavigator />
+      <Toast/>
     </>
   );
 }

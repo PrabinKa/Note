@@ -14,6 +14,8 @@ import {DrawerNavigationProp} from '@react-navigation/drawer';
 import {useTheme} from '../../theme/ThemeProvider';
 import responsiveSize from '../../utils/ResponsiveSize';
 import {Notes} from '../../constants/Constants';
+import Toast from 'react-native-toast-message';
+import {useAnimatedHeader} from '../../components';
 
 type TrashNoteScreenNavigationProp = DrawerNavigationProp<
   DrawerParamList,
@@ -36,69 +38,25 @@ const CONTAINER_HEIGHT = 80;
 
 export default function TrashNoteScreen({navigation}: TrashNoteScreenProps) {
   const {colors} = useTheme();
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const offsetAnim = useRef(new Animated.Value(0)).current;
-
-  const clampedScroll = Animated.diffClamp(
-    Animated.add(
-      scrollY.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, 1],
-        extrapolateLeft: 'clamp',
-      }),
-      offsetAnim,
-    ),
-    0,
-    CONTAINER_HEIGHT,
-  );
-
-  let clampedScrollValue: number = 0;
-  let offsetValue = 0;
-  let scrollValue: number = 0;
+  const {
+    onMomentumScrollBegin,
+    onMomentumScrollEnd,
+    onScrollEndDrag,
+    scrollY,
+    Translate,
+  } = useAnimatedHeader();
 
   useEffect(() => {
-    scrollY.addListener(({value}) => {
-      const diff = value - scrollValue;
-      scrollValue = value;
-      clampedScrollValue = Math.min(
-        Math.max(clampedScrollValue * diff, 0),
-        CONTAINER_HEIGHT,
-      );
-    });
-    offsetAnim.addListener(({value}) => {
-      offsetValue = value;
-    });
+    showToast();
   }, []);
 
-  const Translate = clampedScroll.interpolate({
-    inputRange: [0, CONTAINER_HEIGHT],
-    outputRange: [0, -CONTAINER_HEIGHT],
-    extrapolate: 'clamp',
-  });
-
-  let scrollEndTimer: NodeJS.Timeout | null = null;
-
-  const onMomentumScrollBegin = () => {
-    if (scrollEndTimer) {
-      clearTimeout(scrollEndTimer);
-    }
-  };
-
-  const onMementumScrollEnd = () => {
-    const toValue =
-      scrollValue > CONTAINER_HEIGHT &&
-      clampedScrollValue > CONTAINER_HEIGHT / 2
-        ? offsetValue + CONTAINER_HEIGHT
-        : offsetValue - CONTAINER_HEIGHT;
-    Animated.timing(offsetAnim, {
-      toValue,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const onScrollEndDrag = () => {
-    scrollEndTimer = setTimeout(onMementumScrollEnd, 250);
+  const showToast = () => {
+    Toast.show({
+      type: 'info',
+      position: 'top',
+      text2: 'Trash Notes will be automatically deleted after 7 days',
+      visibilityTime: 10000,
+    });
   };
 
   const renderNotesItem = ({item}: {item: Note}): React.JSX.Element => {
@@ -158,7 +116,7 @@ export default function TrashNoteScreen({navigation}: TrashNoteScreenProps) {
       <Animated.FlatList
         contentContainerStyle={styles.contentContainer}
         onMomentumScrollBegin={onMomentumScrollBegin}
-        onMomentumScrollEnd={onMementumScrollEnd}
+        onMomentumScrollEnd={onMomentumScrollEnd}
         onScrollEndDrag={onScrollEndDrag}
         scrollEventThrottle={1}
         onScroll={Animated.event(
