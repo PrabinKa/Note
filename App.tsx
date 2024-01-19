@@ -7,12 +7,12 @@ import {useTheme} from './src/theme/ThemeProvider';
 import Toast from 'react-native-toast-message';
 
 function App(): React.JSX.Element {
-  const {colors} = useTheme();
+  const {colors, dark} = useTheme();
   return (
     <>
       <StatusBar
         backgroundColor={colors.background}
-        barStyle={'dark-content'}
+        barStyle={ dark ? 'light-content' : 'dark-content'}
       />
       <RootNavigator />
       <Toast/>
