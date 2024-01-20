@@ -1,4 +1,4 @@
-import React, {useRef, useEffect} from 'react';
+import React, {useRef, useEffect, useState} from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   Animated,
   Keyboard,
+  Alert,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
@@ -18,9 +19,17 @@ import {RootStackParamList} from '../../navigation/RootNavigator';
 
 import {useTheme} from '../../theme/ThemeProvider';
 import responsiveSize from '../../utils/ResponsiveSize';
+import SelectDropdown from 'react-native-select-dropdown';
+import {ErrorMessage} from '../../components';
+import {openDatabase} from 'react-native-sqlite-storage';
+
+let db = openDatabase({name: 'NoteTakingAppDatabase.db'});
 
 //Navigation props
-type CreateNoteScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'CreateNote'>;
+type CreateNoteScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'CreateNote'
+>;
 interface CreateNoteScreenProps {
   navigation: CreateNoteScreenNavigationProp;
 }
@@ -35,7 +44,9 @@ interface HeaderProps {
   colors: ColorProps['colors'];
   onPress: () => void;
 }
-const Header = ({colors, onPress}: HeaderProps) => {
+
+//Header component of this create note screen
+const Header: React.FC<HeaderProps> = ({colors, onPress}) => {
   return (
     <View style={styles.headerWrapper}>
       <Pressable
@@ -58,9 +69,79 @@ const Header = ({colors, onPress}: HeaderProps) => {
   );
 };
 
-export default function CreateNoteScreen({navigation}: CreateNoteScreenProps) {
+//category of notes
+const categories: string[] = ['Work', 'Personal', 'Love', 'Interested'];
+
+export default function CreateNoteScreen(
+  this: any,
+  {navigation}: CreateNoteScreenProps,
+) {
   const {colors} = useTheme();
   const opacityValue = useRef(new Animated.Value(1)).current;
+  const [showErrorMessage, setShowErroressage] = useState(false);
+  const [errorText, setErrorText] = useState('');
+
+  const date = new Date();
+
+  const [inputs, setInputs] = useState({
+    id: Math.random().toString(16).slice(2),
+    noteTitle: '',
+    noteCategory: '',
+    createdDate: date.toISOString(),
+    note: '',
+  });
+
+  //notes entered data handler which assign data to inputs state
+  const inputChangeHandler = (
+    inputIdentifier: string,
+    enteredValue: string,
+  ) => {
+    setInputs(currentValue => {
+      return {
+        ...currentValue,
+        [inputIdentifier]: enteredValue,
+      };
+    });
+  };
+
+  //function that request to close error message modal
+  const closeErrorMessage = () => {
+    setShowErroressage(false);
+  };
+
+  //checks wethere data is empty or not and save data to the data base
+  const uploadNotesData = async () => {
+    const {id, noteTitle, noteCategory, createdDate, note} = inputs;
+    if (
+      noteTitle.trim() == '' ||
+      noteCategory.trim() == '' ||
+      note.trim() == ''
+    ) {
+      setShowErroressage(true);
+      setErrorText('You may forgot to fill all fields!');
+    } else {
+      (await db).transaction(tx => {
+        tx.executeSql(
+          'INSERT INTO table_note (id, noteTitle, noteCategory, createdDate, note) VALUES (?,?,?,?,?)',
+          [id, noteTitle, noteCategory, createdDate, note],
+          (tx: any, results: {rowsAffected: number}) => {
+            console.log('Results', results.rowsAffected);
+
+            if (results.rowsAffected > 0) {
+              Alert.alert(
+                'Success!',
+                'Your Note has been saved successfully !',
+              );
+              navigation.goBack();
+            } else {
+              Alert.alert('Failed!', 'Please try again!');
+              navigation.goBack();
+            }
+          },
+        );
+      });
+    }
+  };
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -105,8 +186,36 @@ export default function CreateNoteScreen({navigation}: CreateNoteScreenProps) {
             fontSize: responsiveSize(24),
             color: colors.text,
           }}
+          onChangeText={inputChangeHandler.bind(this, 'noteTitle')}
+          value={inputs.noteTitle}
         />
-        <Text style={[styles.date, {color: colors.text}]}>1/17/2024</Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+          <Text style={[styles.date, {color: colors.text}]}>1/17/2024</Text>
+          <SelectDropdown
+            data={categories}
+            defaultButtonText="Select Category"
+            buttonStyle={{
+              height: 40,
+              width: responsiveSize(150),
+              borderRadius: 5,
+              backgroundColor: colors.text,
+            }}
+            buttonTextStyle={{
+              fontSize: 14,
+              fontWeight: '500',
+              color: colors.background,
+            }}
+            dropdownStyle={{borderRadius: 5, backgroundColor: colors.text}}
+            onSelect={(selectedItem, index) => {
+              setInputs({...inputs, noteCategory: selectedItem});
+            }}
+          />
+        </View>
       </View>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View
@@ -120,17 +229,25 @@ export default function CreateNoteScreen({navigation}: CreateNoteScreenProps) {
               fontSize: responsiveSize(18),
               color: colors.text,
             }}
+            onChangeText={inputChangeHandler.bind(this, 'note')}
+            value={inputs.note}
           />
         </View>
       </ScrollView>
       <Animated.View style={{opacity: opacityValue}}>
         <TouchableOpacity
+          onPress={uploadNotesData}
           style={[styles.button, {backgroundColor: colors.button}]}>
           <Text style={{color: colors.background, fontWeight: 'bold'}}>
             Save
           </Text>
         </TouchableOpacity>
       </Animated.View>
+      <ErrorMessage
+        isVisible={showErrorMessage}
+        message={errorText}
+        onClose={closeErrorMessage}
+      />
     </KeyboardAvoidingView>
   );
 }

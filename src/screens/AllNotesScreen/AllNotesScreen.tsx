@@ -21,6 +21,7 @@ import {
   responsiveWidth,
   responsiveFontSize,
 } from 'react-native-responsive-dimensions';
+import {fetchNotesFromDatabase} from '../../services/Database';
 
 interface AllNotesScreenProps {
   navigation: any;
@@ -32,6 +33,14 @@ interface Note {
   date: string;
   note: string;
   category: string;
+}
+
+interface Note1 {
+  createdDate: string;
+  id: string;
+  note: string;
+  noteCategory: string;
+  noteTitle: string;
 }
 
 interface NotesCategoryTypes {
@@ -58,7 +67,7 @@ const Header = ({navigation}: AllNotesScreenProps) => {
         activeOpacity={0.5}
         onPress={() => navigation.openDrawer()}>
         <Image
-          resizeMode='contain'
+          resizeMode="contain"
           source={require('../../assets/drawer.png')}
           style={[styles.drawerIcon, {tintColor: colors.text}]}
         />
@@ -88,7 +97,8 @@ const SearchBar = ({colors}: ColorType) => {
       </View>
       <View style={styles.searchButtonWrapper}>
         <Pressable style={({pressed}) => pressed && styles.itemPressed}>
-          <Text style={{color: colors.background, fontWeight: '700', fontSize: 16}}>
+          <Text
+            style={{color: colors.background, fontWeight: '700', fontSize: 16}}>
             Search
           </Text>
         </Pressable>
@@ -139,10 +149,29 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
   const {colors} = useTheme();
   const [notesData, setNotesData] = useState([...Notes]);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [data, setData] = useState<Note1[]>([]);
 
   useEffect(() => {
     filterNotesByCategory();
   }, [selectedCategory]);
+
+  useEffect(() => {
+    fetchDataFromDatabase(); // Fetch data from the database when the component mounts
+
+    // Listen for changes in navigation state
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchDataFromDatabase();
+    });
+
+    // Clean up the subscription when the component unmounts
+    return unsubscribe;
+  }, []);
+
+  const fetchDataFromDatabase = () => {
+    fetchNotesFromDatabase((data: Note1[]) => {
+      setData(data);
+    });
+  };
 
   const filterNotesByCategory = () => {
     if (selectedCategory === 'All') {
@@ -155,15 +184,18 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
     }
   };
 
-  const renderNotesItem = ({item}: {item: Note}): React.JSX.Element => {
+  const renderNotesItem = ({item}: {item: Note1}): React.JSX.Element => {
     return (
       <View
-        style={[styles.noteDetailsContainer, {borderBottomColor: colors.accent}]}>
+        style={[
+          styles.noteDetailsContainer,
+          {borderBottomColor: colors.accent},
+        ]}>
         <Text style={{fontSize: 20, fontWeight: '700', color: colors.text}}>
           {item.noteTitle}
         </Text>
         <Text style={{fontSize: 12, fontWeight: '700', color: colors.text}}>
-          {item.date}
+          1/22/2222
         </Text>
         <Text numberOfLines={5} style={{fontSize: 14, color: colors.text}}>
           {item.note}
@@ -206,7 +238,7 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
         />
       </View>
       <FlatList
-        data={notesData}
+        data={data}
         showsVerticalScrollIndicator={false}
         keyExtractor={item => `${item.id}`}
         renderItem={renderNotesItem}

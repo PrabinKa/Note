@@ -35,7 +35,7 @@ export default function SettingScreen({navigation}: SettingsScreenProps) {
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back-outline" size={35} color={colors.text} />
+          <Ionicons name="chevron-back-sharp" size={35} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, {color: colors.text}]}>Settings</Text>
       </View>
