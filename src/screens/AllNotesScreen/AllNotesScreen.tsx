@@ -9,6 +9,7 @@ import {
   FlatList,
   TextInput,
   Pressable,
+  Modal,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
@@ -28,14 +29,6 @@ interface AllNotesScreenProps {
 }
 
 interface Note {
-  id: number;
-  noteTitle: string;
-  date: string;
-  note: string;
-  category: string;
-}
-
-interface Note1 {
   createdDate: string;
   id: string;
   note: string;
@@ -146,14 +139,11 @@ const NotesCategoryButtons = ({
 };
 
 export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
-  const {colors} = useTheme();
+  const {colors, dark} = useTheme();
   const [notesData, setNotesData] = useState([...Notes]);
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [data, setData] = useState<Note1[]>([]);
-
-  useEffect(() => {
-    filterNotesByCategory();
-  }, [selectedCategory]);
+  const [data, setData] = useState<Note[]>([]);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
 
   useEffect(() => {
     fetchDataFromDatabase(); // Fetch data from the database when the component mounts
@@ -165,28 +155,38 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
 
     // Clean up the subscription when the component unmounts
     return unsubscribe;
-  }, []);
+  }, [selectedCategory]);
 
   const fetchDataFromDatabase = () => {
-    fetchNotesFromDatabase((data: Note1[]) => {
-      setData(data);
+    fetchNotesFromDatabase((data: Note[]) => {
+      if (selectedCategory !== 'All') {
+        let notes = data.filter(value => {
+          return selectedCategory === value.noteCategory;
+        });
+        setData(notes);
+      } else {
+        setData(data);
+      }
     });
   };
 
-  const filterNotesByCategory = () => {
-    if (selectedCategory === 'All') {
-      setNotesData(Notes);
-    } else {
-      let data = Notes.filter(value => {
-        return selectedCategory === value.category;
-      });
-      setNotesData(data);
-    }
+  const onClose = () => {
+    setIsVisible(!isVisible);
   };
 
-  const renderNotesItem = ({item}: {item: Note1}): React.JSX.Element => {
+  const handleLongPress = () => {
+    setIsVisible(!isVisible);
+  };
+
+  const renderNotesItem = ({item}: {item: Note}): React.JSX.Element => {
+    let date = item.createdDate;
+
     return (
-      <View
+      <TouchableOpacity
+        onPress={() => {navigation.navigate('EditNote', {item})}}
+        onLongPress={() => {
+          handleLongPress();
+        }}
         style={[
           styles.noteDetailsContainer,
           {borderBottomColor: colors.accent},
@@ -195,12 +195,12 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
           {item.noteTitle}
         </Text>
         <Text style={{fontSize: 12, fontWeight: '700', color: colors.text}}>
-          1/22/2222
+          {date.slice(0, 10)}
         </Text>
         <Text numberOfLines={5} style={{fontSize: 14, color: colors.text}}>
           {item.note}
         </Text>
-      </View>
+      </TouchableOpacity>
     );
   };
   return (
@@ -243,6 +243,41 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
         keyExtractor={item => `${item.id}`}
         renderItem={renderNotesItem}
       />
+      <Modal animationType="fade" transparent={true} visible={isVisible}>
+        <View
+          style={[
+            styles.modalContainer,
+            {
+              backgroundColor: dark
+                ? 'rgba(255, 255, 255, 0.2)'
+                : 'rgba(0, 0, 0, 0.4)',
+            },
+          ]}>
+          <View
+            style={[styles.modalContent, {backgroundColor: colors.background}]}>
+            <Text style={{fontSize: 16, fontWeight: '500', color: colors.secondary}}>
+              Perform Operation
+            </Text>
+            <TouchableOpacity style={styles.operationsButtonWrapper}>
+              <Text style={[styles.operationButtonText, {color: colors.text}]}>
+                Delete
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.operationsButtonWrapper}>
+              <Text style={[styles.operationButtonText, {color: colors.text}]}>
+                Archive
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.closeButton, {backgroundColor: colors.button}]}
+              onPress={onClose}>
+              <Text style={[styles.closeButtonText, {color: colors.text}]}>
+                Cancel
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -323,5 +358,35 @@ const styles = StyleSheet.create({
   },
   itemPressed: {
     opacity: 0.2,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    height: responsiveSize(250),
+    width: '70%',
+    padding: 20,
+    borderRadius: 10,
+  },
+  closeButton: {
+    borderRadius: 5,
+    padding: 10,
+    marginVertical: 10,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontWeight: 'bold',
+  },
+  operationsButtonWrapper: {
+    height: 40,
+    marginVertical: 10,
+    justifyContent: 'center',
+    borderBottomWidth: 1,
+    borderColor: '#D4D4D4',
+  },
+  operationButtonText: {
+    fontWeight: '700',
   },
 });

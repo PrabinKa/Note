@@ -1,63 +1,68 @@
-import React, {useRef, useEffect, useState} from 'react';
 import {
-  Pressable,
   StyleSheet,
   Text,
-  TextInput,
   View,
   KeyboardAvoidingView,
-  ScrollView,
   Platform,
-  TouchableOpacity,
+  ScrollView,
   Animated,
+  TouchableOpacity,
+  TextInput,
   Keyboard,
-  Alert,
 } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import React, {useEffect, useRef, useState} from 'react';
 import {RootStackParamList} from '../../navigation/RootNavigator';
-
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {RouteProp} from '@react-navigation/native';
+import {Header, ErrorMessage} from '../../components';
 import {useTheme} from '../../theme/ThemeProvider';
 import responsiveSize from '../../utils/ResponsiveSize';
 import SelectDropdown from 'react-native-select-dropdown';
-import {ErrorMessage} from '../../components';
-import {openDatabase} from 'react-native-sqlite-storage';
-import {Header} from '../../components';
+import {editNotesInDatabase} from '../../services/Database';
 
-let db = openDatabase({name: 'NoteTakingAppDatabase.db'});
-
-//Navigation props
-type CreateNoteScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  'CreateNote'
->;
-interface CreateNoteScreenProps {
-  navigation: CreateNoteScreenNavigationProp;
-}
-
-//category of notes
 const categories: string[] = ['Work', 'Personal', 'Love', 'Interested'];
 
-export default function CreateNoteScreen(
+type EditNoteScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'EditNote'
+>;
+
+type EditNoteScreenRouteProp = RouteProp<RootStackParamList, 'EditNote'>;
+
+interface EditNoteScreenProps {
+  navigation: EditNoteScreenNavigationProp;
+  route: EditNoteScreenRouteProp;
+}
+
+export default function EditNoteScreen(
   this: any,
-  {navigation}: CreateNoteScreenProps,
+  {navigation, route}: EditNoteScreenProps,
 ) {
   const {colors} = useTheme();
   const opacityValue = useRef(new Animated.Value(1)).current;
+  const [value] = useState(route.params.item);
+  const [initialNotes, setInitialNotes] = useState(value);
   const [showErrorMessage, setShowErroressage] = useState(false);
   const [errorText, setErrorText] = useState('');
-
-  const date = new Date();
+  const [dataChanged, setDataChanged] = useState(false);
 
   const [inputs, setInputs] = useState({
-    id: Math.random().toString(16).slice(2),
-    noteTitle: '',
-    noteCategory: '',
-    createdDate: date.toISOString(),
-    note: '',
+    id: value.id,
+    noteTitle: value.noteTitle,
+    noteCategory: value.noteCategory,
+    createdDate: value.createdDate,
+    note: value.note,
   });
 
-  //notes entered data handler which assign data to inputs state
+
+  useEffect(() => {
+    const hasDataChanged =
+      initialNotes.noteTitle !== inputs.noteTitle ||
+      initialNotes.noteCategory !== inputs.noteCategory ||
+      initialNotes.note !== inputs.note;
+    setDataChanged(hasDataChanged);
+  }, [initialNotes, inputs]);
+
   const inputChangeHandler = (
     inputIdentifier: string,
     enteredValue: string,
@@ -75,8 +80,7 @@ export default function CreateNoteScreen(
     setShowErroressage(false);
   };
 
-  //checks wethere data is empty or not and save data to the data base
-  const uploadNotesData = async () => {
+  const updateButtonHandler = () => {
     const {id, noteTitle, noteCategory, createdDate, note} = inputs;
     if (
       noteTitle.trim() == '' ||
@@ -86,25 +90,7 @@ export default function CreateNoteScreen(
       setShowErroressage(true);
       setErrorText('You may forgot to fill all fields!');
     } else {
-      (await db).transaction(tx => {
-        tx.executeSql(
-          'INSERT INTO table_note (id, noteTitle, noteCategory, createdDate, note) VALUES (?,?,?,?,?)',
-          [id, noteTitle, noteCategory, createdDate, note],
-          (tx: any, results: {rowsAffected: number}) => {
-
-            if (results.rowsAffected > 0) {
-              Alert.alert(
-                'Success!',
-                'Your Note has been saved successfully !',
-              );
-              navigation.goBack();
-            } else {
-              Alert.alert('Failed!', 'Please try again!');
-              navigation.goBack();
-            }
-          },
-        );
-      });
+      editNotesInDatabase(inputs, navigation);
     }
   };
 
@@ -141,7 +127,7 @@ export default function CreateNoteScreen(
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{flex: 1, backgroundColor: colors.background}}>
-      <Header onPress={() => navigation.goBack()} title='Create Note' />
+      <Header onPress={() => navigation.goBack()} title="Your Note" />
       <View style={[styles.titleContainer, {borderBottomColor: colors.accent}]}>
         <TextInput
           placeholder="Note Title"
@@ -160,10 +146,12 @@ export default function CreateNoteScreen(
             justifyContent: 'space-between',
             alignItems: 'center',
           }}>
-          <Text style={[styles.date, {color: colors.text}]}>{(date.toISOString()).slice(0, 10)}</Text>
+          <Text style={[styles.date, {color: colors.text}]}>
+            {(inputs.createdDate).slice(0, 10)}
+          </Text>
           <SelectDropdown
             data={categories}
-            defaultButtonText="Select Category"
+            defaultButtonText={inputs.noteCategory}
             buttonStyle={{
               height: 40,
               width: responsiveSize(150),
@@ -186,7 +174,7 @@ export default function CreateNoteScreen(
         <View
           style={{paddingHorizontal: responsiveSize(15), marginVertical: 20}}>
           <TextInput
-            placeholder="Create your note..."
+            placeholder="Write your note..."
             placeholderTextColor={'#D4D4D4'}
             selectionColor={'#888'}
             multiline
@@ -199,15 +187,19 @@ export default function CreateNoteScreen(
           />
         </View>
       </ScrollView>
-      <Animated.View style={{opacity: opacityValue}}>
-        <TouchableOpacity
-          onPress={uploadNotesData}
-          style={[styles.button, {backgroundColor: colors.button}]}>
-          <Text style={{color: colors.background, fontWeight: 'bold'}}>
-            Save
-          </Text>
-        </TouchableOpacity>
-      </Animated.View>
+      {dataChanged && (
+        <Animated.View style={{opacity: opacityValue}}>
+          <TouchableOpacity
+            onPress={() => {
+              updateButtonHandler();
+            }}
+            style={[styles.button, {backgroundColor: colors.button}]}>
+            <Text style={{color: colors.background, fontWeight: 'bold'}}>
+              Update
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
       <ErrorMessage
         isVisible={showErrorMessage}
         message={errorText}
@@ -218,13 +210,6 @@ export default function CreateNoteScreen(
 }
 
 const styles = StyleSheet.create({
-  headerWrapper: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: responsiveSize(15),
-    paddingVertical: responsiveSize(5),
-  },
   titleContainer: {
     paddingHorizontal: responsiveSize(15),
     paddingVertical: responsiveSize(30),
@@ -244,8 +229,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 10,
-  },
-  pressed: {
-    opacity: 0.2,
   },
 });

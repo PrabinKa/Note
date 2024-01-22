@@ -20,7 +20,7 @@ function App(): React.JSX.Element {
         const databaseInstance = await openDatabase({
           name: 'NoteTakingAppDatabase.db',
         });
-        console.log('Database opened successfully');
+        // console.log('Database opened successfully');
         setDb(databaseInstance);
       } catch (error) {
         console.error('Error opening database:', error);

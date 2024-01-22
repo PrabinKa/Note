@@ -5,6 +5,7 @@ import InputFieldWithIcon from "./InputField/InputFieldWithIcon";
 import useAnimatedHeader from "./header-anim/useAnimatedHeader";
 import ThemeOption from "./theme-option/ThemeOption";
 import ErrorMessage from "./error-message/ErrorMessage";
+import Header from "./header-note/Header";
 
 export {
     Button,
@@ -13,5 +14,6 @@ export {
     InputFieldWithIcon,
     useAnimatedHeader,
     ThemeOption,
-    ErrorMessage
+    ErrorMessage,
+    Header
 }
