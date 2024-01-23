@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
   Text,
@@ -14,6 +14,7 @@ import {useTheme} from '../../theme/ThemeProvider';
 import responsiveSize from '../../utils/ResponsiveSize';
 import {Notes} from '../../constants/Constants';
 import {useAnimatedHeader} from '../../components';
+import {fetchArchiveNotesFromDatabase} from '../../services/Database';
 
 type ArchiveNoteScreenNavigationProp = DrawerNavigationProp<
   DrawerParamList,
@@ -27,11 +28,11 @@ interface ArchiveNoteScreenProps {
 const CONTAINER_HEIGHT = 80;
 
 interface Note {
-  id: number;
-  noteTitle: string;
-  date: string;
+  createdDate: string;
+  id: string;
   note: string;
-  category: string;
+  noteCategory: string;
+  noteTitle: string;
 }
 
 export default function ArchiveNoteScreen({
@@ -45,6 +46,25 @@ export default function ArchiveNoteScreen({
     scrollY,
     Translate,
   } = useAnimatedHeader();
+  const [archiveNotes, setArchiveNotes] = useState<Note[]>([]);
+
+  useEffect(() => {
+    fetchDataFromDatabase(); // Fetch data from the database when the component mounts
+
+    // Listen for changes in navigation state
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchDataFromDatabase();
+    });
+
+    // Clean up the subscription when the component unmounts
+    return unsubscribe;
+  }, []);
+
+  const fetchDataFromDatabase = () => {
+    fetchArchiveNotesFromDatabase((data: Note[]) => {
+      setArchiveNotes(data);
+    });
+  };
 
   const renderNotesItem = ({item}: {item: Note}): React.JSX.Element => {
     return (
@@ -57,7 +77,7 @@ export default function ArchiveNoteScreen({
           {item.noteTitle}
         </Text>
         <Text style={{fontSize: 12, fontWeight: '700', color: colors.text}}>
-          {item.date}
+          {item.createdDate}
         </Text>
         <Text numberOfLines={5} style={{fontSize: 14, color: colors.text}}>
           {item.note}
@@ -99,22 +119,27 @@ export default function ArchiveNoteScreen({
           />
         </TouchableOpacity>
       </Animated.View>
-
-      <Animated.FlatList
-        contentContainerStyle={styles.contentContainer}
-        onMomentumScrollBegin={onMomentumScrollBegin}
-        onMomentumScrollEnd={onMomentumScrollEnd}
-        onScrollEndDrag={onScrollEndDrag}
-        scrollEventThrottle={1}
-        onScroll={Animated.event(
-          [{nativeEvent: {contentOffset: {y: scrollY}}}],
-          {useNativeDriver: true},
-        )}
-        data={Notes}
-        showsVerticalScrollIndicator={false}
-        keyExtractor={item => `${item.id}`}
-        renderItem={renderNotesItem}
-      />
+      {archiveNotes.length !== 0 ? (
+        <Animated.FlatList
+          contentContainerStyle={styles.contentContainer}
+          onMomentumScrollBegin={onMomentumScrollBegin}
+          onMomentumScrollEnd={onMomentumScrollEnd}
+          onScrollEndDrag={onScrollEndDrag}
+          scrollEventThrottle={1}
+          onScroll={Animated.event(
+            [{nativeEvent: {contentOffset: {y: scrollY}}}],
+            {useNativeDriver: true},
+          )}
+          data={archiveNotes}
+          showsVerticalScrollIndicator={false}
+          keyExtractor={item => `${item.id}`}
+          renderItem={renderNotesItem}
+        />
+      ) : (
+        <View style={{flex: 1, justifyContent: "center", alignItems: "center"}}>
+          <Text style={{color: colors.secondary}}>Notes are not added to Archive yet!</Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

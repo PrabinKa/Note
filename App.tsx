@@ -5,7 +5,7 @@ import {StatusBar} from 'react-native';
 import RootNavigator from './src/navigation/RootNavigator';
 import {useTheme} from './src/theme/ThemeProvider';
 import Toast from 'react-native-toast-message';
-import {openDatabase, SQLiteDatabase } from 'react-native-sqlite-storage';
+import {openDatabase, SQLiteDatabase} from 'react-native-sqlite-storage';
 
 // Define types for the database object
 type Database = SQLiteDatabase;
@@ -37,11 +37,27 @@ function App(): React.JSX.Element {
           "SELECT name FROM sqlite_master WHERE type='table' AND name='table_note'",
           [],
           (tx, res): void => {
-            console.log('item:', res.rows.length);
+            console.log('item note:', res.rows.length);
             if (res.rows.length === 0) {
               tx.executeSql('DROP TABLE IF EXISTS table_note', []);
               tx.executeSql(
                 'CREATE TABLE IF NOT EXISTS table_note(id VARCHAR(50), noteTitle VARCHAR(100), noteCategory VARCHAR(50), createdDate VARCHAR(50), note VARCHAR(500))',
+                [],
+              );
+            }
+          },
+        );
+      });
+      db.transaction((txn): void => {
+        txn.executeSql(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='archive_note'",
+          [],
+          (tx, res): void => {
+            console.log('item archive:', res.rows.length);
+            if (res.rows.length === 0) {
+              tx.executeSql('DROP TABLE IF EXISTS archive_note', []);
+              tx.executeSql(
+                'CREATE TABLE IF NOT EXISTS archive_note(id VARCHAR(50), noteTitle VARCHAR(100), noteCategory VARCHAR(50), createdDate VARCHAR(50), note VARCHAR(500))',
                 [],
               );
             }
