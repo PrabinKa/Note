@@ -64,6 +64,22 @@ function App(): React.JSX.Element {
           },
         );
       });
+      db.transaction((txn): void => {
+        txn.executeSql(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='trash_note'",
+          [],
+          (tx, res): void => {
+            console.log('item trash:', res.rows.length);
+            if (res.rows.length === 0) {
+              tx.executeSql('DROP TABLE IF EXISTS trash_note', []);
+              tx.executeSql(
+                'CREATE TABLE IF NOT EXISTS trash_note(id VARCHAR(50), noteTitle VARCHAR(100), noteCategory VARCHAR(50), createdDate VARCHAR(50), note VARCHAR(500))',
+                [],
+              );
+            }
+          },
+        );
+      });
     }
   }, [db]);
 

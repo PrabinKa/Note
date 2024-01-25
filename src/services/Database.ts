@@ -40,22 +40,24 @@ export async function editNotesInDatabase(data: Note, navigation: any) {
   });
 }
 
-export async function deleteNoteFromDatabase(id : string): Promise<boolean> {
-  return new Promise(async (resolve) => {
-    (await db).transaction((tx) => {
+export async function deleteNoteFromDatabase(id: string): Promise<boolean> {
+  return new Promise(async resolve => {
+    (await db).transaction(tx => {
       tx.executeSql(
         'DELETE FROM table_note WHERE id = ?',
         [id],
         (tx, results) => {
           const isDeleted = results.rowsAffected > 0;
           resolve(isDeleted);
-        }
+        },
       );
     });
-});
+  });
 }
 
-export async function fetchArchiveNotesFromDatabase(callback: (temp: Note[]) => void) {
+export async function fetchArchiveNotesFromDatabase(
+  callback: (temp: Note[]) => void,
+) {
   (await db).transaction(tx => {
     tx.executeSql('SELECT * FROM archive_note', [], (tx, results) => {
       let temp = [];
@@ -63,6 +65,50 @@ export async function fetchArchiveNotesFromDatabase(callback: (temp: Note[]) => 
         temp.push(results.rows.item(i));
       }
       callback(temp);
+    });
+  });
+}
+
+export async function deleteArchiveNotes(id: string): Promise<boolean> {
+  return new Promise(async resolve => {
+    (await db).transaction(tx => {
+      tx.executeSql(
+        'DELETE FROM archive_note WHERE id = ?',
+        [id],
+        (tx, results) => {
+          const isDeleted = results.rowsAffected > 0;
+          resolve(isDeleted);
+        },
+      );
+    });
+  });
+}
+
+export async function fetchTrashNotesFromDatabase(
+  callback: (temp: Note[]) => void,
+) {
+  (await db).transaction(tx => {
+    tx.executeSql('SELECT * FROM trash_note', [], (tx, results) => {
+      let temp = [];
+      for (let i = 0; i < results.rows.length; ++i) {
+        temp.push(results.rows.item(i));
+      }
+      callback(temp);
+    });
+  });
+}
+
+export async function deleteTrashNotes(id: string): Promise<boolean> {
+  return new Promise(async resolve => {
+    (await db).transaction(tx => {
+      tx.executeSql(
+        'DELETE FROM trash_note WHERE id = ?',
+        [id],
+        (tx, results) => {
+          const isDeleted = results.rowsAffected > 0;
+          resolve(isDeleted);
+        },
+      );
     });
   });
 }

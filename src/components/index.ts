@@ -6,6 +6,8 @@ import useAnimatedHeader from "./header-anim/useAnimatedHeader";
 import ThemeOption from "./theme-option/ThemeOption";
 import ErrorMessage from "./error-message/ErrorMessage";
 import Header from "./header-note/Header";
+import CustomModal from "./note-opertaion-modal/CustomModal";
+import Loader from "./custom-loader/Loader";
 
 export {
     Button,
@@ -15,5 +17,7 @@ export {
     useAnimatedHeader,
     ThemeOption,
     ErrorMessage,
-    Header
+    Header,
+    CustomModal,
+    Loader
 }

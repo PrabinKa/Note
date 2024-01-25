@@ -5,7 +5,6 @@ import {
   View,
   TouchableOpacity,
   FlatList,
-  Modal,
   ToastAndroid,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -14,6 +13,7 @@ import {useTheme} from '../../theme/ThemeProvider';
 import {NotesCategory} from '../../constants/Constants';
 import responsiveSize from '../../utils/ResponsiveSize';
 import {NoteScreenHeader, NoteSearchBar, NotesCategoryButtons} from './index';
+import {CustomModal, Loader} from '../../components';
 
 import {
   responsiveHeight,
@@ -48,10 +48,18 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
   const [data, setData] = useState<Note[]>([]);
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const [selectedNote, setSelectedNote] = useState<Note>();
+  const [loadingState, setLoadingState] = useState<boolean>(false);
+
+  console.log(loadingState)
+
+  if (loadingState) {
+    return <Loader />;
+  }
 
   const archiveNotesHandler = async () => {
     const {id, noteTitle, noteCategory, createdDate, note} = selectedNote || {};
     setIsVisible(!isVisible);
+    setLoadingState(true);
 
     (await db).transaction(async tx => {
       tx.executeSql(
@@ -61,6 +69,7 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
           if (results.rowsAffected > 0 && id) {
             try {
               const isDeleted = await deleteNoteFromDatabase(id);
+              setLoadingState(false);
               if (isDeleted) {
                 ToastAndroid.show('Note Archived', ToastAndroid.SHORT);
               }
@@ -75,9 +84,40 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
     });
   };
 
+  const moveNotesToTrashHandler = async () => {
+    const {id, noteTitle, noteCategory, createdDate, note} = selectedNote || {};
+    setIsVisible(!isVisible);
+    setLoadingState(true);
+
+    (await db).transaction(async tx => {
+      tx.executeSql(
+        'INSERT INTO trash_note (id, noteTitle, noteCategory, createdDate, note) VALUES (?,?,?,?,?)',
+        [id, noteTitle, noteCategory, createdDate, note],
+        async (tx: any, results: {rowsAffected: number}) => {
+          if (results.rowsAffected > 0 && id) {
+            try {
+              const isDeleted = await deleteNoteFromDatabase(id);
+              setLoadingState(false);
+              if (isDeleted) {
+                ToastAndroid.show('Note is moved to Trash', ToastAndroid.SHORT);
+              }
+            } catch (error) {
+              console.error('Error deleting note:', error);
+            }
+          } else {
+            ToastAndroid.show('Deleting note failed!', ToastAndroid.SHORT);
+          }
+        },
+      );
+    });
+  };
+
   useEffect(() => {
+    setLoadingState(true);
+
     fetchDataFromDatabase(); // Fetch data from the database when the component mounts
 
+    setLoadingState(false);
     // Listen for changes in navigation state
     const unsubscribe = navigation.addListener('focus', () => {
       fetchDataFromDatabase();
@@ -85,7 +125,7 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
 
     // Clean up the subscription when the component unmounts
     return unsubscribe;
-  }, [selectedCategory, archiveNotesHandler]);
+  }, [selectedCategory, archiveNotesHandler, moveNotesToTrashHandler]);
 
   const fetchDataFromDatabase = () => {
     fetchNotesFromDatabase((data: Note[]) => {
@@ -100,7 +140,7 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
     });
   };
 
-  const onClose = () => {
+  const handleOnClose = () => {
     setIsVisible(!isVisible);
   };
 
@@ -155,7 +195,9 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
           <Ionicons name="add-sharp" color={colors.background} size={30} />
         </TouchableOpacity>
       </View>
-      <NoteSearchBar />
+      <View style={{marginHorizontal: responsiveSize(15)}}>
+        <NoteSearchBar />
+      </View>
       <View
         style={{
           marginTop: responsiveHeight(2),
@@ -176,50 +218,16 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
         keyExtractor={item => `${item.id}`}
         renderItem={renderNotesItem}
       />
-      <Modal animationType="fade" transparent={true} visible={isVisible}>
-        <View
-          style={[
-            styles.modalContainer,
-            {
-              backgroundColor: dark
-                ? 'rgba(255, 255, 255, 0.2)'
-                : 'rgba(0, 0, 0, 0.4)',
-            },
-          ]}>
-          <View
-            style={[styles.modalContent, {backgroundColor: colors.background}]}>
-            <Text
-              style={{
-                fontSize: 16,
-                fontWeight: '500',
-                color: colors.secondary,
-              }}>
-              Perform Operation
-            </Text>
-            <TouchableOpacity style={styles.operationsButtonWrapper}>
-              <Text style={[styles.operationButtonText, {color: colors.text}]}>
-                Delete
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                archiveNotesHandler();
-              }}
-              style={styles.operationsButtonWrapper}>
-              <Text style={[styles.operationButtonText, {color: colors.text}]}>
-                Archive
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.closeButton, {backgroundColor: colors.button}]}
-              onPress={onClose}>
-              <Text style={[styles.closeButtonText, {color: colors.text}]}>
-                Cancel
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <CustomModal
+        isVisible={isVisible}
+        onClose={handleOnClose}
+        modalTitle="Perform Operation"
+        colors={colors}
+        buttons={[
+          {text: 'Archive', onPress: archiveNotesHandler},
+          {text: 'Delete', onPress: moveNotesToTrashHandler},
+        ]}
+      />
     </View>
   );
 }

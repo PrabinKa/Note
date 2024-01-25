@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   searchIconWrapper: {
     position: 'absolute',
     height: 44,
-    left: responsiveSize(12),
+    left: responsiveSize(15),
     top: 0,
     justifyContent: 'center',
     alignItems: 'center',
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   searchButtonWrapper: {
     position: 'absolute',
     height: 44,
-    right: responsiveSize(12),
+    right: responsiveSize(15),
     top: 0,
     justifyContent: 'center',
     alignItems: 'center',

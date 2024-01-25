@@ -7,14 +7,18 @@ import {
   Animated,
   Image,
   TouchableOpacity,
+  ToastAndroid
 } from 'react-native';
 import {DrawerNavigationProp} from '@react-navigation/drawer';
 import {DrawerParamList} from '../../navigation/DrawerNavigator';
 import {useTheme} from '../../theme/ThemeProvider';
 import responsiveSize from '../../utils/ResponsiveSize';
-import {Notes} from '../../constants/Constants';
-import {useAnimatedHeader} from '../../components';
-import {fetchArchiveNotesFromDatabase} from '../../services/Database';
+import {useAnimatedHeader, CustomModal, Loader} from '../../components';
+import {fetchArchiveNotesFromDatabase, deleteArchiveNotes} from '../../services/Database';
+
+import {openDatabase} from 'react-native-sqlite-storage';
+
+let db = openDatabase({name: 'NoteTakingAppDatabase.db'});
 
 type ArchiveNoteScreenNavigationProp = DrawerNavigationProp<
   DrawerParamList,
@@ -47,6 +51,61 @@ export default function ArchiveNoteScreen({
     Translate,
   } = useAnimatedHeader();
   const [archiveNotes, setArchiveNotes] = useState<Note[]>([]);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [selectedNote, setSelectedNote] = useState<Note>()
+
+  const unArchivePressHandler = async () => {
+    setIsVisible(!isVisible);
+    const {id, noteTitle, noteCategory, createdDate, note} = selectedNote || {};
+
+    (await db).transaction(async tx => {
+      tx.executeSql(
+        'INSERT INTO table_note (id, noteTitle, noteCategory, createdDate, note) VALUES (?,?,?,?,?)',
+        [id, noteTitle, noteCategory, createdDate, note],
+        async (tx: any, results: {rowsAffected: number}) => {
+          if (results.rowsAffected > 0 && id) {
+            try {
+              const isDeleted = await deleteArchiveNotes(id);
+              if (isDeleted) {
+                ToastAndroid.show('Note Unarchived', ToastAndroid.SHORT);
+              }
+            } catch (error) {
+              console.error('Error deleting note:', error);
+            }
+          } else {
+            ToastAndroid.show('Note Unarchiving failed!', ToastAndroid.SHORT);
+          }
+        },
+      );
+    });
+  };
+
+  const deletePressHandler = async () => {
+    setIsVisible(!isVisible);
+
+    const {id, noteTitle, noteCategory, createdDate, note} = selectedNote || {};
+
+    (await db).transaction(async tx => {
+      tx.executeSql(
+        'INSERT INTO trash_note (id, noteTitle, noteCategory, createdDate, note) VALUES (?,?,?,?,?)',
+        [id, noteTitle, noteCategory, createdDate, note],
+        async (tx: any, results: {rowsAffected: number}) => {
+          if (results.rowsAffected > 0 && id) {
+            try {
+              const isDeleted = await deleteArchiveNotes(id);
+              if (isDeleted) {
+                ToastAndroid.show('Note deleted', ToastAndroid.SHORT);
+              }
+            } catch (error) {
+              console.error('Error deleting note:', error);
+            }
+          } else {
+            ToastAndroid.show('Note deleting failed!', ToastAndroid.SHORT);
+          }
+        },
+      );
+    });
+  };
 
   useEffect(() => {
     fetchDataFromDatabase(); // Fetch data from the database when the component mounts
@@ -58,7 +117,7 @@ export default function ArchiveNoteScreen({
 
     // Clean up the subscription when the component unmounts
     return unsubscribe;
-  }, []);
+  }, [unArchivePressHandler]);
 
   const fetchDataFromDatabase = () => {
     fetchArchiveNotesFromDatabase((data: Note[]) => {
@@ -66,9 +125,20 @@ export default function ArchiveNoteScreen({
     });
   };
 
+  const handleOnClose = () => setIsVisible(!isVisible);
+
+
+  const handleLongPress = (item: Note) => {
+    setIsVisible(!isVisible)
+    setSelectedNote(item)
+  }
+
   const renderNotesItem = ({item}: {item: Note}): React.JSX.Element => {
     return (
-      <View
+      <TouchableOpacity
+        onLongPress={() => {
+          handleLongPress(item);
+        }}
         style={[
           styles.noteDetailsContainer,
           {borderBottomColor: colors.accent},
@@ -82,7 +152,7 @@ export default function ArchiveNoteScreen({
         <Text numberOfLines={5} style={{fontSize: 14, color: colors.text}}>
           {item.note}
         </Text>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -136,10 +206,22 @@ export default function ArchiveNoteScreen({
           renderItem={renderNotesItem}
         />
       ) : (
-        <View style={{flex: 1, justifyContent: "center", alignItems: "center"}}>
-          <Text style={{color: colors.secondary}}>Notes are not added to Archive yet!</Text>
+        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+          <Text style={{color: colors.secondary}}>
+            Notes are not added to Archive yet!
+          </Text>
         </View>
       )}
+      <CustomModal
+        isVisible={isVisible}
+        onClose={handleOnClose}
+        modalTitle="Perform Operation"
+        colors={colors}
+        buttons={[
+          {text: 'Unarchive', onPress: unArchivePressHandler},
+          {text: 'Delete', onPress: deletePressHandler},
+        ]}
+      />
     </SafeAreaView>
   );
 }
