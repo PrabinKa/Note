@@ -32,7 +32,7 @@ const NoteScreenHeader = ({navigation}: any) => {
   );
 };
 
-export default NoteScreenHeader;
+export default React.memo(NoteScreenHeader);
 
 const styles = StyleSheet.create({
   headerContainer: {

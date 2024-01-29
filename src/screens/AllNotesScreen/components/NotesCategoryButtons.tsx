@@ -1,45 +1,37 @@
-import React from 'react';
+import React, {memo, useCallback, useMemo} from 'react';
 import {StyleSheet, Text, ScrollView, TouchableOpacity} from 'react-native';
-import {
-  responsiveHeight,
-  responsiveWidth,
-  responsiveFontSize,
-} from 'react-native-responsive-dimensions';
 import responsiveSize from '../../../utils/ResponsiveSize';
-
-interface NotesCategoryTypes {
-  id: number;
-  category: string;
-}
-
-interface ColorType {
-  colors: Record<string, string>;
-}
+import { useTheme } from '../../../theme/ThemeProvider';
+import { NotesCategory } from '../../../constants/Constants';
 
 interface NoteCategoryButtonsProps {
-  categories: NotesCategoryTypes[];
   selectedCategory: string;
   onSelect: (category: string) => void;
-  colors: ColorType['colors'];
 }
 
-export default function NotesCategoryButtons({
-  categories,
+const NotesCategoryButtons = ({
   selectedCategory,
-  onSelect,
-  colors,
-}: NoteCategoryButtonsProps) {
+  onSelect
+}: NoteCategoryButtonsProps) => {
+  const {colors} = useTheme();
+
+  const memoizedSelectedCategory = useMemo(() => selectedCategory, [selectedCategory]);
+
+  const handleSelect = useCallback((category: string) => {
+    onSelect(category);
+  }, [onSelect]);
+
   return (
     <ScrollView horizontal showsVerticalScrollIndicator={false}>
-      {categories.map(item => (
+      {NotesCategory.map(item => (
         <TouchableOpacity
           key={item.id}
-          onPress={() => onSelect(item.category)}
+          onPress={() => handleSelect(item.category)}
           style={[
             styles.notesCategoryButton,
             {
               backgroundColor:
-                selectedCategory === item.category
+              memoizedSelectedCategory === item.category
                   ? colors.button
                   : colors.background,
               borderColor: colors.text,
@@ -54,14 +46,16 @@ export default function NotesCategoryButtons({
   );
 }
 
+export default memo(NotesCategoryButtons);
+
 const styles = StyleSheet.create({
   notesCategoryButton: {
     height: 30,
-    paddingHorizontal: responsiveWidth(5),
-    marginHorizontal: responsiveWidth(3),
+    paddingHorizontal: responsiveSize(20),
+    marginHorizontal: responsiveSize(10),
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: responsiveWidth(3),
+    borderRadius: responsiveSize(10),
     borderWidth: 1,
   },
   notesCategoryText: {

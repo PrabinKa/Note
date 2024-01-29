@@ -4,11 +4,11 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '../../../theme/ThemeProvider';
 import responsiveSize from '../../../utils/ResponsiveSize';
 
-export default function NoteSearchBar() {
+function NoteSearchBar() {
   const {colors} = useTheme();
 
   return (
-    <View>
+    <View style={{marginVertical: responsiveSize(10)}}>
       <TextInput
         placeholder="Search notes"
         placeholderTextColor={'#D4D4D4'}
@@ -32,6 +32,8 @@ export default function NoteSearchBar() {
     </View>
   );
 }
+
+export default React.memo(NoteSearchBar);
 
 const styles = StyleSheet.create({
   searchBox: {

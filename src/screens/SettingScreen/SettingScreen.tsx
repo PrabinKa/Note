@@ -31,13 +31,13 @@ export default function SettingScreen({navigation}: SettingsScreenProps) {
 
   const Header = () => {
     return (
-      <View style={styles.headerWrapper}>
+      <View style={[styles.headerWrapper, { borderBottomColor: colors.accent }]}>
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back-sharp" size={35} color={colors.text} />
+          <Ionicons name="chevron-back-sharp" size={35} color={colors.primary} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, {color: colors.text}]}>Settings</Text>
+        <Text style={[styles.headerTitle, {color: colors.primary}]}>Settings</Text>
       </View>
     );
   };
@@ -124,7 +124,8 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: responsiveSize(15),
+    borderBottomWidth: 2,
+    paddingHorizontal: responsiveSize(10),
   },
   headerTitle: {
     fontSize: responsiveSize(20),

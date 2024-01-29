@@ -20,14 +20,14 @@ export default function Header({onPress, title}: HeaderProps) {
         <Ionicons
           name="chevron-back-sharp"
           size={responsiveSize(40)}
-          color={colors.text}
+          color={colors.primary}
         />
       </Pressable>
       <Text
         style={{
-          fontSize: 18,
+          fontSize: responsiveSize(24),
           fontWeight: '500',
-          color: colors.text,
+          color: colors.primary,
           marginLeft: 30,
         }}>
         {title}
@@ -38,6 +38,7 @@ export default function Header({onPress, title}: HeaderProps) {
 
 const styles = StyleSheet.create({
   headerWrapper: {
+    height: 80,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: responsiveSize(15),

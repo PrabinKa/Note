@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useMemo, useCallback} from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,16 +10,9 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import {useTheme} from '../../theme/ThemeProvider';
-import {NotesCategory} from '../../constants/Constants';
 import responsiveSize from '../../utils/ResponsiveSize';
-import {NoteScreenHeader, NoteSearchBar, NotesCategoryButtons} from './index';
-import {CustomModal, Loader} from '../../components';
 
-import {
-  responsiveHeight,
-  responsiveWidth,
-  responsiveFontSize,
-} from 'react-native-responsive-dimensions';
+import {CustomModal, NoteContainer, EmptyNote} from '../../components';
 
 import {
   fetchNotesFromDatabase,
@@ -27,6 +20,10 @@ import {
 } from '../../services/Database';
 
 import {openDatabase} from 'react-native-sqlite-storage';
+import NotesCategoryButtons from './components/NotesCategoryButtons';
+import NoteScreenHeader from './components/NoteScreenHeader';
+import NoteSearchBar from './components/NoteSearchBar';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 let db = openDatabase({name: 'NoteTakingAppDatabase.db'});
 
@@ -48,18 +45,10 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
   const [data, setData] = useState<Note[]>([]);
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const [selectedNote, setSelectedNote] = useState<Note>();
-  const [loadingState, setLoadingState] = useState<boolean>(false);
-
-  console.log(loadingState)
-
-  if (loadingState) {
-    return <Loader />;
-  }
 
   const archiveNotesHandler = async () => {
     const {id, noteTitle, noteCategory, createdDate, note} = selectedNote || {};
     setIsVisible(!isVisible);
-    setLoadingState(true);
 
     (await db).transaction(async tx => {
       tx.executeSql(
@@ -69,7 +58,7 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
           if (results.rowsAffected > 0 && id) {
             try {
               const isDeleted = await deleteNoteFromDatabase(id);
-              setLoadingState(false);
+
               if (isDeleted) {
                 ToastAndroid.show('Note Archived', ToastAndroid.SHORT);
               }
@@ -87,7 +76,6 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
   const moveNotesToTrashHandler = async () => {
     const {id, noteTitle, noteCategory, createdDate, note} = selectedNote || {};
     setIsVisible(!isVisible);
-    setLoadingState(true);
 
     (await db).transaction(async tx => {
       tx.executeSql(
@@ -97,7 +85,6 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
           if (results.rowsAffected > 0 && id) {
             try {
               const isDeleted = await deleteNoteFromDatabase(id);
-              setLoadingState(false);
               if (isDeleted) {
                 ToastAndroid.show('Note is moved to Trash', ToastAndroid.SHORT);
               }
@@ -113,11 +100,8 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
   };
 
   useEffect(() => {
-    setLoadingState(true);
-
     fetchDataFromDatabase(); // Fetch data from the database when the component mounts
 
-    setLoadingState(false);
     // Listen for changes in navigation state
     const unsubscribe = navigation.addListener('focus', () => {
       fetchDataFromDatabase();
@@ -150,32 +134,15 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
   };
 
   const renderNotesItem = ({item}: {item: Note}): React.JSX.Element => {
-    let date = item.createdDate;
-
     return (
-      <TouchableOpacity
-        onPress={() => {
-          navigation.navigate('EditNote', {item});
-        }}
-        onLongPress={() => {
-          handleLongPress(item);
-        }}
-        style={[
-          styles.noteDetailsContainer,
-          {borderBottomColor: colors.accent},
-        ]}>
-        <Text style={{fontSize: 20, fontWeight: '700', color: colors.text}}>
-          {item.noteTitle}
-        </Text>
-        <Text style={{fontSize: 12, fontWeight: '700', color: colors.text}}>
-          {date.slice(0, 10)}
-        </Text>
-        <Text numberOfLines={5} style={{fontSize: 14, color: colors.text}}>
-          {item.note}
-        </Text>
-      </TouchableOpacity>
+      <NoteContainer
+        item={item}
+        onPress={() => navigation.navigate('EditNote', {item})}
+        onLongPress={() => handleLongPress(item)}
+      />
     );
   };
+
   return (
     <View
       style={{
@@ -184,8 +151,8 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
       }}>
       <NoteScreenHeader navigation={navigation} />
       <View
-        style={[styles.headerContainer, {marginVertical: responsiveHeight(2)}]}>
-        <Text style={{color: colors.text, fontSize: responsiveFontSize(5)}}>
+        style={[styles.headerContainer, {marginVertical: responsiveSize(10)}]}>
+        <Text style={{color: colors.text, fontSize: responsiveSize(35)}}>
           Your Notes
         </Text>
         <TouchableOpacity
@@ -200,29 +167,29 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
       </View>
       <View
         style={{
-          marginTop: responsiveHeight(2),
-          paddingBottom: responsiveHeight(2),
+          marginTop: responsiveSize(20),
+          paddingBottom: responsiveSize(20),
           borderBottomColor: colors.accent,
           borderBottomWidth: 2,
         }}>
         <NotesCategoryButtons
-          categories={NotesCategory}
           selectedCategory={selectedCategory}
           onSelect={category => setSelectedCategory(category)}
-          colors={colors}
         />
       </View>
-      <FlatList
-        data={data}
-        showsVerticalScrollIndicator={false}
-        keyExtractor={item => `${item.id}`}
-        renderItem={renderNotesItem}
-      />
+      {data.length !== 0 ? (
+        <FlatList
+          data={data}
+          showsVerticalScrollIndicator={false}
+          keyExtractor={item => `item ${item.id}`}
+          renderItem={renderNotesItem}
+        />
+      ) : (
+        <EmptyNote message={'Unleash Your thoughts!'} />
+      )}
       <CustomModal
         isVisible={isVisible}
         onClose={handleOnClose}
-        modalTitle="Perform Operation"
-        colors={colors}
         buttons={[
           {text: 'Archive', onPress: archiveNotesHandler},
           {text: 'Delete', onPress: moveNotesToTrashHandler},
@@ -240,16 +207,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: responsiveSize(15),
   },
   addNoteButton: {
-    height: responsiveWidth(13),
-    width: responsiveWidth(13),
-    borderRadius: responsiveWidth(2),
+    height: responsiveSize(50),
+    width: responsiveSize(50),
+    borderRadius: responsiveSize(5),
     justifyContent: 'center',
     alignItems: 'center',
   },
   noteDetailsContainer: {
     borderBottomWidth: 2,
-    paddingVertical: responsiveHeight(2.5),
-    paddingHorizontal: responsiveWidth(5),
+    paddingVertical: responsiveSize(15),
+    paddingHorizontal: responsiveSize(15),
   },
   modalContainer: {
     flex: 1,

@@ -212,7 +212,7 @@ export default function EditNoteScreen(
 const styles = StyleSheet.create({
   titleContainer: {
     paddingHorizontal: responsiveSize(15),
-    paddingVertical: responsiveSize(30),
+    paddingBottom: responsiveSize(10),
     borderBottomWidth: 3,
   },
   date: {

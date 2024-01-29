@@ -7,14 +7,18 @@ import {
   Animated,
   Image,
   TouchableOpacity,
-  ToastAndroid
+  ToastAndroid,
 } from 'react-native';
 import {DrawerNavigationProp} from '@react-navigation/drawer';
 import {DrawerParamList} from '../../navigation/DrawerNavigator';
 import {useTheme} from '../../theme/ThemeProvider';
 import responsiveSize from '../../utils/ResponsiveSize';
-import {useAnimatedHeader, CustomModal, Loader} from '../../components';
-import {fetchArchiveNotesFromDatabase, deleteArchiveNotes} from '../../services/Database';
+import {useAnimatedHeader, CustomModal, NoteContainer, EmptyNote} from '../../components';
+import {
+  fetchArchiveNotesFromDatabase,
+  deleteArchiveNotes,
+} from '../../services/Database';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import {openDatabase} from 'react-native-sqlite-storage';
 
@@ -26,7 +30,7 @@ type ArchiveNoteScreenNavigationProp = DrawerNavigationProp<
 >;
 
 interface ArchiveNoteScreenProps {
-  navigation: ArchiveNoteScreenNavigationProp;
+  navigation: any;
 }
 
 const CONTAINER_HEIGHT = 80;
@@ -52,7 +56,7 @@ export default function ArchiveNoteScreen({
   } = useAnimatedHeader();
   const [archiveNotes, setArchiveNotes] = useState<Note[]>([]);
   const [isVisible, setIsVisible] = useState<boolean>(false);
-  const [selectedNote, setSelectedNote] = useState<Note>()
+  const [selectedNote, setSelectedNote] = useState<Note>();
 
   const unArchivePressHandler = async () => {
     setIsVisible(!isVisible);
@@ -127,32 +131,18 @@ export default function ArchiveNoteScreen({
 
   const handleOnClose = () => setIsVisible(!isVisible);
 
-
   const handleLongPress = (item: Note) => {
-    setIsVisible(!isVisible)
-    setSelectedNote(item)
-  }
+    setIsVisible(!isVisible);
+    setSelectedNote(item);
+  };
 
   const renderNotesItem = ({item}: {item: Note}): React.JSX.Element => {
     return (
-      <TouchableOpacity
-        onLongPress={() => {
-          handleLongPress(item);
-        }}
-        style={[
-          styles.noteDetailsContainer,
-          {borderBottomColor: colors.accent},
-        ]}>
-        <Text style={{fontSize: 20, fontWeight: '700', color: colors.text}}>
-          {item.noteTitle}
-        </Text>
-        <Text style={{fontSize: 12, fontWeight: '700', color: colors.text}}>
-          {item.createdDate}
-        </Text>
-        <Text numberOfLines={5} style={{fontSize: 14, color: colors.text}}>
-          {item.note}
-        </Text>
-      </TouchableOpacity>
+      <NoteContainer
+        item={item}
+        onPress={() => navigation.navigate('EditNote', {item})}
+        onLongPress={() => handleLongPress(item)}
+      />
     );
   };
 
@@ -163,31 +153,16 @@ export default function ArchiveNoteScreen({
           styles.headerWrapper,
           {
             backgroundColor: colors.background,
+            borderBottomColor: colors.accent,
             transform: [{translateY: Translate}],
           },
         ]}>
-        <Text
-          style={{
-            fontSize: responsiveSize(20),
-            fontWeight: '700',
-            color: colors.text,
-          }}>
-          Archive
-        </Text>
         <TouchableOpacity
           activeOpacity={0.5}
-          onPress={() => navigation.openDrawer()}>
-          <Image
-            source={require('../../assets/drawer.png')}
-            resizeMode="contain"
-            style={{
-              height: responsiveSize(50),
-              width: responsiveSize(50),
-              tintColor: colors.text,
-              alignSelf: 'flex-end',
-            }}
-          />
+          onPress={() => navigation.toggleDrawer()}>
+          <Ionicons name="chevron-back-sharp" size={35} color={colors.primary} />
         </TouchableOpacity>
+        <Text style={[styles.headerTitle, {color: colors.primary}]}>Archive</Text>
       </Animated.View>
       {archiveNotes.length !== 0 ? (
         <Animated.FlatList
@@ -206,17 +181,11 @@ export default function ArchiveNoteScreen({
           renderItem={renderNotesItem}
         />
       ) : (
-        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-          <Text style={{color: colors.secondary}}>
-            Notes are not added to Archive yet!
-          </Text>
-        </View>
+        <EmptyNote message='Archive is Empty!' />
       )}
       <CustomModal
         isVisible={isVisible}
         onClose={handleOnClose}
-        modalTitle="Perform Operation"
-        colors={colors}
         buttons={[
           {text: 'Unarchive', onPress: unArchivePressHandler},
           {text: 'Delete', onPress: deletePressHandler},
@@ -231,12 +200,17 @@ const styles = StyleSheet.create({
     height: CONTAINER_HEIGHT,
     width: '100%',
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     position: 'absolute',
     top: 0,
-    paddingHorizontal: responsiveSize(15),
+    paddingHorizontal: responsiveSize(10),
+    borderBottomWidth: 2,
     zIndex: 2,
+  },
+  headerTitle: {
+    fontSize: responsiveSize(20),
+    fontWeight: '700',
+    marginLeft: responsiveSize(20),
   },
   noteDetailsContainer: {
     borderBottomWidth: 2,

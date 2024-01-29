@@ -16,11 +16,12 @@ import {DrawerNavigationProp} from '@react-navigation/drawer';
 import {useTheme} from '../../theme/ThemeProvider';
 import responsiveSize from '../../utils/ResponsiveSize';
 import Toast from 'react-native-toast-message';
-import {useAnimatedHeader, CustomModal} from '../../components';
+import {useAnimatedHeader, CustomModal, NoteContainer, EmptyNote} from '../../components';
 import {
   fetchTrashNotesFromDatabase,
   deleteTrashNotes,
 } from '../../services/Database';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import {openDatabase} from 'react-native-sqlite-storage';
 
@@ -32,7 +33,7 @@ type TrashNoteScreenNavigationProp = DrawerNavigationProp<
 >;
 
 interface TrashNoteScreenProps {
-  navigation: TrashNoteScreenNavigationProp;
+  navigation: any;
 }
 
 interface Note {
@@ -72,13 +73,13 @@ export default function TrashNoteScreen({navigation}: TrashNoteScreenProps) {
             try {
               const isDeleted = await deleteTrashNotes(id);
               if (isDeleted) {
-                ToastAndroid.show('Note deleted', ToastAndroid.SHORT);
+                ToastAndroid.show('Note Restored', ToastAndroid.SHORT);
               }
             } catch (error) {
               console.error('Error deleting note:', error);
             }
           } else {
-            ToastAndroid.show('Note deleting failed!', ToastAndroid.SHORT);
+            ToastAndroid.show('Note restoring failed!', ToastAndroid.SHORT);
           }
         },
       );
@@ -153,24 +154,11 @@ export default function TrashNoteScreen({navigation}: TrashNoteScreenProps) {
 
   const renderNotesItem = ({item}: {item: Note}): React.JSX.Element => {
     return (
-      <TouchableOpacity
-        onLongPress={() => {
-          handleLongPress(item);
-        }}
-        style={[
-          styles.noteDetailsContainer,
-          {borderBottomColor: colors.accent},
-        ]}>
-        <Text style={{fontSize: 20, fontWeight: '700', color: colors.text}}>
-          {item.noteTitle}
-        </Text>
-        <Text style={{fontSize: 12, fontWeight: '700', color: colors.text}}>
-          {item.createdDate.slice(0, 10)}
-        </Text>
-        <Text numberOfLines={5} style={{fontSize: 14, color: colors.text}}>
-          {item.note}
-        </Text>
-      </TouchableOpacity>
+      <NoteContainer
+        item={item}
+        onPress={() => navigation.navigate('EditNote', {item})}
+        onLongPress={() => handleLongPress(item)}
+      />
     );
   };
 
@@ -181,31 +169,16 @@ export default function TrashNoteScreen({navigation}: TrashNoteScreenProps) {
           styles.headerWrapper,
           {
             backgroundColor: colors.background,
+            borderBottomColor: colors.accent,
             transform: [{translateY: Translate}],
           },
         ]}>
-        <Text
-          style={{
-            fontSize: responsiveSize(20),
-            fontWeight: '700',
-            color: colors.text,
-          }}>
-          Trash
-        </Text>
         <TouchableOpacity
           activeOpacity={0.5}
-          onPress={() => navigation.openDrawer()}>
-          <Image
-            source={require('../../assets/drawer.png')}
-            resizeMode="contain"
-            style={{
-              height: responsiveSize(50),
-              width: responsiveSize(50),
-              tintColor: colors.text,
-              alignSelf: 'flex-end',
-            }}
-          />
+          onPress={() => navigation.toggleDrawer()}>
+          <Ionicons name="chevron-back-sharp" size={35} color={colors.primary} />
         </TouchableOpacity>
+        <Text style={[styles.headerTitle, {color: colors.primary}]}>Trash</Text>
       </Animated.View>
       {trashNotes.length != 0 ? (
         <Animated.FlatList
@@ -224,17 +197,11 @@ export default function TrashNoteScreen({navigation}: TrashNoteScreenProps) {
           renderItem={renderNotesItem}
         />
       ) : (
-        <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-          <Text style={{color: colors.secondary}}>
-            Notes are not added to Trash yet!
-          </Text>
-        </View>
+        <EmptyNote message='Trash is Empty!' />
       )}
       <CustomModal
         isVisible={isVisible}
         onClose={handleOnClose}
-        modalTitle="Perform Operation"
-        colors={colors}
         buttons={[
           {text: 'Restore', onPress: restorePressHandler},
           {text: 'Delete', onPress: deletePressHandler},
@@ -249,12 +216,17 @@ const styles = StyleSheet.create({
     height: CONTAINER_HEIGHT,
     width: '100%',
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     position: 'absolute',
     top: 0,
-    paddingHorizontal: responsiveSize(15),
+    paddingHorizontal: responsiveSize(10),
+    borderBottomWidth: 2,
     zIndex: 2,
+  },
+  headerTitle: {
+    fontSize: responsiveSize(20),
+    fontWeight: '700',
+    marginLeft: responsiveSize(20),
   },
   noteDetailsContainer: {
     borderBottomWidth: 2,

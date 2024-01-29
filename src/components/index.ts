@@ -7,7 +7,8 @@ import ThemeOption from "./theme-option/ThemeOption";
 import ErrorMessage from "./error-message/ErrorMessage";
 import Header from "./header-note/Header";
 import CustomModal from "./note-opertaion-modal/CustomModal";
-import Loader from "./custom-loader/Loader";
+import NoteContainer from "./note-container/NoteContainer";
+import EmptyNote from "./empty-note/EmptyNote";
 
 export {
     Button,
@@ -19,5 +20,6 @@ export {
     ErrorMessage,
     Header,
     CustomModal,
-    Loader
+    NoteContainer,
+    EmptyNote
 }

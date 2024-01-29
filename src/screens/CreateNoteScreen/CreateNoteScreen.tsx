@@ -84,7 +84,7 @@ export default function CreateNoteScreen(
       note.trim() == ''
     ) {
       setShowErroressage(true);
-      setErrorText('You may forgot to fill all fields!');
+      setErrorText('You may have forgot to fill all fields!');
     } else {
       (await db).transaction(tx => {
         tx.executeSql(
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     paddingHorizontal: responsiveSize(15),
-    paddingVertical: responsiveSize(30),
+    paddingBottom: responsiveSize(10),
     borderBottomWidth: 3,
   },
   date: {
