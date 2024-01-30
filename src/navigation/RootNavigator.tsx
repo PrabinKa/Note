@@ -1,5 +1,5 @@
 import {StyleSheet, Text, View} from 'react-native';
-import React from 'react';
+import React, {useEffect, useContext} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
@@ -9,6 +9,7 @@ import SignupScreen from '../screens/SignupSccreen/SignupScreen';
 import DrawerNavigator from './DrawerNavigator';
 import CreateNoteScreen from '../screens/CreateNoteScreen/CreateNoteScreen';
 import EditNoteScreen from '../screens/EditNoteScreen/EditNoteScreen';
+import {GlobalAthentication} from '../global-context/GlobalAuthentication';
 
 interface Note {
   createdDate: string;
@@ -19,32 +20,67 @@ interface Note {
 }
 
 export type RootStackParamList = {
-    Drawer: undefined;
-    Login: undefined; 
-    SignUp: undefined; 
-    CreateNote: undefined;
-    EditNote: undefined;
-  };
+  Home: undefined;
+  Auth: undefined;
+  Drawer: undefined;
+  Login: undefined;
+  SignUp: undefined;
+  CreateNote: undefined;
+  EditNote: undefined;
+};
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+const HomeStack = () => {
+  return (
+    <Stack.Navigator
+      initialRouteName="Drawer"
+      screenOptions={{
+        headerShown: false,
+        animationTypeForReplace: 'push',
+        animation: 'slide_from_right',
+        presentation: 'fullScreenModal',
+      }}>
+      <Stack.Screen name="Drawer" component={DrawerNavigator} />
+      <Stack.Screen name="CreateNote" component={CreateNoteScreen} />
+      <Stack.Screen name="EditNote" component={EditNoteScreen} />
+    </Stack.Navigator>
+  );
+};
+
+const AuthStack = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        animationTypeForReplace: 'push',
+        animation: 'slide_from_right',
+        presentation: 'fullScreenModal',
+      }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="SignUp" component={SignupScreen} />
+    </Stack.Navigator>
+  );
+};
+
 const RootNavigator = () => {
+  const {userToken} = useContext(GlobalAthentication);
+
+  console.log('token', userToken);
+
   return (
     <NavigationContainer>
       <Stack.Navigator
-      initialRouteName='Drawer'
-      screenOptions={{
-        headerShown: false,
-        animationTypeForReplace: "push",
-        animation: "slide_from_right",
-        presentation: "fullScreenModal",
-      }}
-      >
-        <Stack.Screen name="Drawer" component={DrawerNavigator} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="SignUp" component={SignupScreen} />
-        <Stack.Screen name="CreateNote" component={CreateNoteScreen} />
-        <Stack.Screen name="EditNote" component={EditNoteScreen} />
+        screenOptions={{
+          headerShown: false,
+          gestureEnabled: true,
+          gestureDirection: 'horizontal',
+        }}>
+        {userToken ? (
+          <Stack.Screen name="Home" component={HomeStack} />
+        ) : (
+          <Stack.Screen name="Auth" component={AuthStack} />
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

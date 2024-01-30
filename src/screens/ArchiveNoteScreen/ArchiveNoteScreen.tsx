@@ -2,10 +2,8 @@ import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
   Text,
-  View,
   SafeAreaView,
   Animated,
-  Image,
   TouchableOpacity,
   ToastAndroid,
 } from 'react-native';

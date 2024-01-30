@@ -6,6 +6,7 @@ import RootNavigator from './src/navigation/RootNavigator';
 import {useTheme} from './src/theme/ThemeProvider';
 import Toast from 'react-native-toast-message';
 import {openDatabase, SQLiteDatabase} from 'react-native-sqlite-storage';
+import GlobalAuthenticationProvider from './src/global-context/GlobalAuthentication';
 
 // Define types for the database object
 type Database = SQLiteDatabase;
@@ -80,18 +81,35 @@ function App(): React.JSX.Element {
           },
         );
       });
+
+      db.transaction((txn): void => {
+        txn.executeSql(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='category'",
+          [],
+          (tx, res): void => {
+            console.log('item categories:', res.rows.length);
+            if (res.rows.length === 0) {
+              tx.executeSql('DROP TABLE IF EXISTS category', []);
+              tx.executeSql(
+                'CREATE TABLE IF NOT EXISTS category(id INTEGER PRIMARY KEY AUTOINCREMENT, category VARCHAR(50))',
+                [],
+              );
+            }
+          },
+        );
+      });
     }
   }, [db]);
 
   return (
-    <>
+    <GlobalAuthenticationProvider>
       <StatusBar
         backgroundColor={colors.background}
         barStyle={dark ? 'light-content' : 'dark-content'}
       />
       <RootNavigator />
       <Toast />
-    </>
+    </GlobalAuthenticationProvider>
   );
 }
 export default App;

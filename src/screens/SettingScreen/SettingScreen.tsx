@@ -8,13 +8,14 @@ import {
   Pressable,
   TouchableHighlight,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {DrawerParamList} from '../../navigation/DrawerNavigator';
 import {DrawerNavigationProp} from '@react-navigation/drawer';
 import {useTheme} from '../../theme/ThemeProvider';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import responsiveSize from '../../utils/ResponsiveSize';
-import {ThemeOption} from '../../components';
+import {ThemeOption, ButtonWithIcon} from '../../components';
+import { GlobalAthentication } from '../../global-context/GlobalAuthentication';
 
 type SettingScreenNavigationProp = DrawerNavigationProp<
   DrawerParamList,
@@ -28,16 +29,23 @@ interface SettingsScreenProps {
 export default function SettingScreen({navigation}: SettingsScreenProps) {
   const {colors, dark, setScheme} = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
+  const { Logout } = useContext(GlobalAthentication);
 
   const Header = () => {
     return (
-      <View style={[styles.headerWrapper, { borderBottomColor: colors.accent }]}>
+      <View style={[styles.headerWrapper, {borderBottomColor: colors.accent}]}>
         <TouchableOpacity
           activeOpacity={0.5}
           onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back-sharp" size={35} color={colors.primary} />
+          <Ionicons
+            name="chevron-back-sharp"
+            size={35}
+            color={colors.primary}
+          />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, {color: colors.primary}]}>Settings</Text>
+        <Text style={[styles.headerTitle, {color: colors.primary}]}>
+          Settings
+        </Text>
       </View>
     );
   };
@@ -114,6 +122,20 @@ export default function SettingScreen({navigation}: SettingsScreenProps) {
           </View>
         </View>
       </Modal>
+      <View
+        style={{
+          position: 'absolute',
+          bottom: responsiveSize(30),
+          right: responsiveSize(15),
+        }}>
+        <ButtonWithIcon
+          onPress={Logout}
+          colors={colors}
+          icon={require('../../assets/out.png')}
+          buttonStyles={{height: 40, width: responsiveSize(150)}}>
+          Log Out
+        </ButtonWithIcon>
+      </View>
     </SafeAreaView>
   );
 }

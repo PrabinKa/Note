@@ -12,6 +12,7 @@ interface ButtonProps {
   children: string;
   buttonStyles?: ViewStyle;
   icon: ImageSourcePropType;
+  onPress: () => void
 }
 
 export default function ButtonWithIcon({
@@ -19,9 +20,11 @@ export default function ButtonWithIcon({
   buttonStyles,
   colors,
   icon,
+  onPress
 }: ButtonProps) {
   return (
     <TouchableOpacity
+    onPress={onPress}
       activeOpacity={0.7}
       style={{
         backgroundColor: colors.button,

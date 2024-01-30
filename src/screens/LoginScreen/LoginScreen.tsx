@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {
   View,
   SafeAreaView,
@@ -17,6 +17,7 @@ import {
 import {useTheme} from '../../theme/ThemeProvider';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/RootNavigator';
+import { GlobalAthentication } from '../../global-context/GlobalAuthentication';
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -27,6 +28,7 @@ interface LoginScreenProps {
 function LoginScreen({navigation}: LoginScreenProps) {
   const {colors} = useTheme();
   const [showPassword, setShowPassword] = useState(true);
+  const { login } = useContext(GlobalAthentication);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -58,6 +60,7 @@ function LoginScreen({navigation}: LoginScreenProps) {
         </View>
         <Button
           colors={colors}
+          onPress={login}
           buttonStyles={{
             height: 50,
             width: '70%',
@@ -79,6 +82,7 @@ function LoginScreen({navigation}: LoginScreenProps) {
         </View>
         <ButtonWithIcon
           colors={colors}
+          onPress={() => {}}
           buttonStyles={{
             height: 50,
             width: '70%',

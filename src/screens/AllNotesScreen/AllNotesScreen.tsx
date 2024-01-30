@@ -17,6 +17,7 @@ import {CustomModal, NoteContainer, EmptyNote} from '../../components';
 import {
   fetchNotesFromDatabase,
   deleteNoteFromDatabase,
+  fetchNotesCategoryFromDatabase,
 } from '../../services/Database';
 
 import {openDatabase} from 'react-native-sqlite-storage';
@@ -39,12 +40,19 @@ interface Note {
   noteTitle: string;
 }
 
+interface category {
+  id: number;
+  category: string;
+}
+
 export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
   const {colors, dark} = useTheme();
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [data, setData] = useState<Note[]>([]);
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const [selectedNote, setSelectedNote] = useState<Note>();
+  const [categories, setCategories] = useState<category[]>([]);
+
 
   const archiveNotesHandler = async () => {
     const {id, noteTitle, noteCategory, createdDate, note} = selectedNote || {};
@@ -122,6 +130,10 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
         setData(data);
       }
     });
+
+    // fetchNotesCategoryFromDatabase((data: category[]) => {
+    //   setCategories(data);
+    // });
   };
 
   const handleOnClose = () => {

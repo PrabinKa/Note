@@ -112,3 +112,22 @@ export async function deleteTrashNotes(id: string): Promise<boolean> {
     });
   });
 }
+
+interface category {
+  id: number;
+  category: string;
+}
+
+export async function fetchNotesCategoryFromDatabase(
+  callback: (temp: category[]) => void,
+) {
+  (await db).transaction(tx => {
+    tx.executeSql('SELECT * FROM category', [], (tx, results) => {
+      let temp = [];
+      for (let i = 0; i < results.rows.length; ++i) {
+        temp.push(results.rows.item(i));
+      }
+      callback(temp);
+    });
+  });
+}
