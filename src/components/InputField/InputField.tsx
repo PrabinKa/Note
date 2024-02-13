@@ -8,14 +8,16 @@ import {
 
 interface inputProps {
     colors: Record<string, string>,
-    placeholder: string
+    placeholder: string,
+    onChangeText: (value : string) => void
 }
 
-export default function InputField({colors, placeholder}: inputProps) {
+export default function InputField({colors, placeholder, onChangeText}: inputProps) {
   return (
     <TextInput
     placeholder={placeholder}
     selectionColor={colors.primary}
+    onChangeText={onChangeText}
     style={{
       borderColor: colors.primary,
       borderWidth: 1.5,

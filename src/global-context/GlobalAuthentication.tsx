@@ -24,6 +24,7 @@ const GlobalAuthenticationProvider = ({
   const Logout = async() => {
     setUserToken(null)
   }
+  
 
   return (
     <GlobalAthentication.Provider value={{userToken, login, Logout}}>

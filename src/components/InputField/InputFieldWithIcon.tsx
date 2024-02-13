@@ -14,9 +14,10 @@ interface InputProps {
     colors: Record<string, string>,
     placeholder: string;
     onPress: () => void;
+    onChangeText: (value : string) => void;
 }
 
-export default function InputFieldWithIcon({secureTextEntry, colors, placeholder, onPress}: InputProps) {
+export default function InputFieldWithIcon({secureTextEntry, colors, placeholder, onPress, onChangeText}: InputProps) {
   return (
     <View style={[styles.container, {        borderColor: colors.primary,}]}>
       <TextInput
@@ -28,6 +29,7 @@ export default function InputFieldWithIcon({secureTextEntry, colors, placeholder
             width: responsiveWidth(70),
             paddingHorizontal: responsiveWidth(3)
           }}
+          onChangeText={onChangeText}
       />
       <TouchableOpacity style={styles.eyeIcon} onPress={onPress} >
         <Icon name={secureTextEntry ? 'eye-slash' : 'eye'} size={20} color={colors.text} />

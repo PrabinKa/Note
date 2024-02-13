@@ -66,7 +66,7 @@ const AuthStack = () => {
 const RootNavigator = () => {
   const {userToken} = useContext(GlobalAthentication);
 
-  console.log('token', userToken);
+  // console.log('token', userToken);
 
   return (
     <NavigationContainer>

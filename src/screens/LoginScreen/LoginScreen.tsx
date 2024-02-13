@@ -1,12 +1,12 @@
 import React, {useContext, useState} from 'react';
+import {View, SafeAreaView, Text, Pressable, StyleSheet} from 'react-native';
 import {
-  View,
-  SafeAreaView,
-  Text,
-  Pressable,
-  StyleSheet,
-} from 'react-native';
-import {Button, ButtonWithIcon, InputField, InputFieldWithIcon} from '../../components';
+  Button,
+  ButtonWithIcon,
+  InputField,
+  InputFieldWithIcon,
+  ErrorMessage
+} from '../../components';
 
 import {
   responsiveHeight,
@@ -15,24 +15,59 @@ import {
 } from 'react-native-responsive-dimensions';
 
 import {useTheme} from '../../theme/ThemeProvider';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../../navigation/RootNavigator';
-import { GlobalAthentication } from '../../global-context/GlobalAuthentication';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {RootStackParamList} from '../../navigation/RootNavigator';
+import {GlobalAthentication} from '../../global-context/GlobalAuthentication';
 
-type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Login'>;
+type LoginScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'Login'
+>;
 
 interface LoginScreenProps {
   navigation: LoginScreenNavigationProp;
 }
 
-function LoginScreen({navigation}: LoginScreenProps) {
+function LoginScreen(this: any, {navigation}: LoginScreenProps) {
   const {colors} = useTheme();
   const [showPassword, setShowPassword] = useState(true);
-  const { login } = useContext(GlobalAthentication);
+  const {login} = useContext(GlobalAthentication);
+  const [isVisible, setIsVisible] = useState(false)
+  const [error, setError] = useState('')
+  const [inputs, setInputs] = useState({
+    email: '',
+    password: '',
+  });
+
+  type inputIdentifier = string;
+  type inputValue = string;
+
+  const inputChangeHandler = (
+    identifier: inputIdentifier,
+    value: inputValue,
+  ) => {
+    setInputs(curInputs => {
+      return {
+        ...curInputs,
+        [identifier]: value,
+      };
+    });
+  };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
+  const toggleErrorModal = () => setIsVisible(!isVisible)
+
+  const loginButtonHandler = () => {
+    const {email, password} = inputs;
+
+    if(email == '' || password == ''){
+      setIsVisible(!isVisible)
+      setError('Every field is required!')
+    }
+  }
 
   return (
     <SafeAreaView
@@ -48,8 +83,18 @@ function LoginScreen({navigation}: LoginScreenProps) {
       </View>
 
       <View style={{alignItems: 'center'}}>
-        <InputField placeholder={'Email'} colors={colors} />
-        <InputFieldWithIcon placeholder={'Passsword'} colors={colors} secureTextEntry={showPassword} onPress={togglePasswordVisibility} />
+        <InputField
+          onChangeText={inputChangeHandler.bind(this, 'email')}
+          placeholder={'Email'}
+          colors={colors}
+        />
+        <InputFieldWithIcon
+          onChangeText={inputChangeHandler.bind(this, 'password')}
+          placeholder={'Passsword'}
+          colors={colors}
+          secureTextEntry={showPassword}
+          onPress={togglePasswordVisibility}
+        />
         <View style={styles.forgotPasswordWrapper}>
           <Pressable style={({pressed}) => pressed && styles.pressedItem}>
             <Text
@@ -60,7 +105,7 @@ function LoginScreen({navigation}: LoginScreenProps) {
         </View>
         <Button
           colors={colors}
-          onPress={login}
+          onPress={loginButtonHandler}
           buttonStyles={{
             height: 50,
             width: '70%',
@@ -93,7 +138,11 @@ function LoginScreen({navigation}: LoginScreenProps) {
         </ButtonWithIcon>
         <View style={{flexDirection: 'row', justifyContent: 'center'}}>
           <Text style={{fontSize: 16, color: colors.text}}>New user? </Text>
-          <Pressable onPress={() => {navigation.navigate('SignUp')}} style={({pressed}) => pressed && styles.pressedItem}>
+          <Pressable
+            onPress={() => {
+              navigation.navigate('SignUp');
+            }}
+            style={({pressed}) => pressed && styles.pressedItem}>
             <Text
               style={{
                 color: colors.primary,
@@ -105,6 +154,7 @@ function LoginScreen({navigation}: LoginScreenProps) {
           </Pressable>
         </View>
       </View>
+      <ErrorMessage isVisible={isVisible} message={error} onClose={toggleErrorModal} />
     </SafeAreaView>
   );
 }
