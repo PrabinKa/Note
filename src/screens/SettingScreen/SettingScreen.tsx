@@ -7,6 +7,8 @@ import {
   Modal,
   Pressable,
   TouchableHighlight,
+  Alert,
+  ToastAndroid,
 } from 'react-native';
 import React, {useContext, useState} from 'react';
 import {DrawerParamList} from '../../navigation/DrawerNavigator';
@@ -15,7 +17,7 @@ import {useTheme} from '../../theme/ThemeProvider';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import responsiveSize from '../../utils/ResponsiveSize';
 import {ThemeOption, ButtonWithIcon} from '../../components';
-import { GlobalAthentication } from '../../global-context/GlobalAuthentication';
+import {GlobalAthentication} from '../../global-context/GlobalAuthentication';
 
 type SettingScreenNavigationProp = DrawerNavigationProp<
   DrawerParamList,
@@ -29,7 +31,17 @@ interface SettingsScreenProps {
 export default function SettingScreen({navigation}: SettingsScreenProps) {
   const {colors, dark, setScheme} = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
-  const { Logout } = useContext(GlobalAthentication);
+  const {Logout} = useContext(GlobalAthentication);
+
+  const logoutHandler = () => {
+    Alert.alert('Logout!', 'You will be logged out.', [
+      {
+        text: 'Cancel',
+        onPress: () => ToastAndroid.show('Calcelled!', ToastAndroid.SHORT),
+      },
+      {text: 'OK', onPress: () => Logout()},
+    ]);
+  };
 
   const Header = () => {
     return (
@@ -129,7 +141,7 @@ export default function SettingScreen({navigation}: SettingsScreenProps) {
           right: responsiveSize(15),
         }}>
         <ButtonWithIcon
-          onPress={Logout}
+          onPress={logoutHandler}
           colors={colors}
           icon={require('../../assets/out.png')}
           buttonStyles={{height: 40, width: responsiveSize(150)}}>

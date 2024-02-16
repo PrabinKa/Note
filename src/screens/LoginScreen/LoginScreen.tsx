@@ -5,7 +5,7 @@ import {
   ButtonWithIcon,
   InputField,
   InputFieldWithIcon,
-  ErrorMessage
+  ErrorMessage,
 } from '../../components';
 
 import {
@@ -18,6 +18,8 @@ import {useTheme} from '../../theme/ThemeProvider';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from '../../navigation/RootNavigator';
 import {GlobalAthentication} from '../../global-context/GlobalAuthentication';
+import firestore from '@react-native-firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
@@ -28,17 +30,22 @@ interface LoginScreenProps {
   navigation: LoginScreenNavigationProp;
 }
 
+type User = {
+  email: string;
+  fullname: string;
+  password: string;
+  token: string;
+};
+
 function LoginScreen(this: any, {navigation}: LoginScreenProps) {
   const {colors} = useTheme();
+  const {Login, loginError, visible, onClose} = useContext(GlobalAthentication);
   const [showPassword, setShowPassword] = useState(true);
-  const {login} = useContext(GlobalAthentication);
-  const [isVisible, setIsVisible] = useState(false)
-  const [error, setError] = useState('')
   const [inputs, setInputs] = useState({
     email: '',
     password: '',
   });
-
+  console.log('auth', loginError, visible);
   type inputIdentifier = string;
   type inputValue = string;
 
@@ -57,17 +64,6 @@ function LoginScreen(this: any, {navigation}: LoginScreenProps) {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
-
-  const toggleErrorModal = () => setIsVisible(!isVisible)
-
-  const loginButtonHandler = () => {
-    const {email, password} = inputs;
-
-    if(email == '' || password == ''){
-      setIsVisible(!isVisible)
-      setError('Every field is required!')
-    }
-  }
 
   return (
     <SafeAreaView
@@ -105,7 +101,9 @@ function LoginScreen(this: any, {navigation}: LoginScreenProps) {
         </View>
         <Button
           colors={colors}
-          onPress={loginButtonHandler}
+          onPress={() => {
+            Login(inputs.email, inputs.password);
+          }}
           buttonStyles={{
             height: 50,
             width: '70%',
@@ -154,7 +152,11 @@ function LoginScreen(this: any, {navigation}: LoginScreenProps) {
           </Pressable>
         </View>
       </View>
-      <ErrorMessage isVisible={isVisible} message={error} onClose={toggleErrorModal} />
+      <ErrorMessage
+        isVisible={visible}
+        message={loginError}
+        onClose={onClose}
+      />
     </SafeAreaView>
   );
 }

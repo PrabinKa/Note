@@ -3,7 +3,7 @@ import {View, Image, Text, TouchableOpacity, StyleSheet} from 'react-native';
 import {useTheme} from '../../../theme/ThemeProvider';
 import responsiveSize from '../../../utils/ResponsiveSize';
 
-const NoteScreenHeader = ({navigation}: any) => {
+const NoteScreenHeader = ({navigation, userName}: any) => {
   const {colors} = useTheme();
 
   return (
@@ -15,8 +15,8 @@ const NoteScreenHeader = ({navigation}: any) => {
           style={styles.image}
         />
         <Text style={[styles.welcomeText, {color: '#888'}]}>
-          <Text style={{fontSize: responsiveSize(12)}}>Welcome</Text> Prabin
-          Karki
+          <Text style={{fontSize: responsiveSize(12)}}>Welcome</Text>{' '}
+          {userName ? userName : 'Anonymous'}
         </Text>
       </View>
       <TouchableOpacity

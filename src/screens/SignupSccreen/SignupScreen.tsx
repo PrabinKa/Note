@@ -43,6 +43,7 @@ export default function SignupScreen(
     email: '',
     password: '',
     confirmPassword: '',
+    token: Math.random().toString(36).substr(2)
   });
 
   const togglePasswordVisibility = () => {
@@ -71,7 +72,7 @@ export default function SignupScreen(
   const toggleErrorModal = () => setIsVisible(!isVisible);
 
   const submitHandler = () => {
-    const {fullname, email, password, confirmPassword} = inputs;
+    const {fullname, email, password, confirmPassword, token} = inputs;
 
     if (
       fullname == '' ||
@@ -102,7 +103,8 @@ export default function SignupScreen(
           .add({
             fullname: fullname,
             email: email,
-            password: password
+            password: password,
+            token: token
           })
           .then(() => {
             ToastAndroid.show('Signed Up Successfully !', ToastAndroid.SHORT);

@@ -1,5 +1,5 @@
 import {StyleSheet, Text, View} from 'react-native';
-import React, {useEffect, useContext} from 'react';
+import React, {useEffect, useContext, useState} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 
@@ -10,6 +10,7 @@ import DrawerNavigator from './DrawerNavigator';
 import CreateNoteScreen from '../screens/CreateNoteScreen/CreateNoteScreen';
 import EditNoteScreen from '../screens/EditNoteScreen/EditNoteScreen';
 import {GlobalAthentication} from '../global-context/GlobalAuthentication';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Note {
   createdDate: string;
@@ -64,9 +65,9 @@ const AuthStack = () => {
 };
 
 const RootNavigator = () => {
-  const {userToken} = useContext(GlobalAthentication);
+  const {token} = useContext(GlobalAthentication);
 
-  // console.log('token', userToken);
+  console.log('token', token)
 
   return (
     <NavigationContainer>
@@ -76,7 +77,7 @@ const RootNavigator = () => {
           gestureEnabled: true,
           gestureDirection: 'horizontal',
         }}>
-        {userToken ? (
+        {token ? (
           <Stack.Screen name="Home" component={HomeStack} />
         ) : (
           <Stack.Screen name="Auth" component={AuthStack} />

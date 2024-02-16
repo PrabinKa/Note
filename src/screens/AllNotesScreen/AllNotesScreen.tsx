@@ -25,6 +25,7 @@ import NotesCategoryButtons from './components/NotesCategoryButtons';
 import NoteScreenHeader from './components/NoteScreenHeader';
 import NoteSearchBar from './components/NoteSearchBar';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 let db = openDatabase({name: 'NoteTakingAppDatabase.db'});
 
@@ -52,7 +53,7 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
   const [isVisible, setIsVisible] = useState<boolean>(false);
   const [selectedNote, setSelectedNote] = useState<Note>();
   const [categories, setCategories] = useState<category[]>([]);
-
+  const [userName, setUserName] = useState<null | string>(null);
 
   const archiveNotesHandler = async () => {
     const {id, noteTitle, noteCategory, createdDate, note} = selectedNote || {};
@@ -145,6 +146,19 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
     setSelectedNote(item);
   };
 
+  useEffect(() => {
+    const fetchName = async () => {
+      try {
+        let name = await AsyncStorage.getItem('fullname');
+        setUserName(name);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchName(); // Call the async function immediately
+  }, []);
+
   const renderNotesItem = ({item}: {item: Note}): React.JSX.Element => {
     return (
       <NoteContainer
@@ -161,7 +175,7 @@ export default function AllNotesScreen({navigation}: AllNotesScreenProps) {
         flex: 1,
         backgroundColor: colors.background,
       }}>
-      <NoteScreenHeader navigation={navigation} />
+      <NoteScreenHeader navigation={navigation} userName={userName} />
       <View
         style={[styles.headerContainer, {marginVertical: responsiveSize(10)}]}>
         <Text style={{color: colors.text, fontSize: responsiveSize(35)}}>
